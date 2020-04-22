@@ -10,7 +10,6 @@
  ******************************************************************************/
 
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_render.h>
 #include <assert.h>
 #include <math.h>
 #include <stdint.h>
@@ -88,6 +87,7 @@ extern void HW_start(const char *name, unsigned int x, unsigned int y,
   Uint64 start;
   Uint64 freq = SDL_GetPerformanceFrequency();
   struct hwindow *hw = HW_Init(name, x, y);
+
   // HW_Print(hw);
   while (hw->run) {
     HW_Print(hw);
@@ -159,6 +159,7 @@ static struct hwindow *HW_Init(const char *name, unsigned int width,
   ret->run = 1;
   ret->name = name;
   ret->framecpt = 0;
+  ret->fps = -1;
 
   SDL_Init(SDL_INIT_EVERYTHING);
 
@@ -180,6 +181,7 @@ static struct hwindow *HW_Init(const char *name, unsigned int width,
  *  Fermeture d'une fenetre
  */
 static void HW_Close(struct hwindow *hw) {
+  SDL_DestroyTexture(hw->texture);
   SDL_DestroyRenderer(hw->renderer);
   SDL_DestroyWindow(hw->window);
   free(hw->pixels);

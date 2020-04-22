@@ -1,3 +1,4 @@
+#include "geo.h"
 #include "window.h"
 #include <stdio.h>
 
@@ -11,4 +12,8 @@ void user_loop(struct hwindow *hw) {
                (int)(255 * (i + j) / (HW_GetX(hw) + HW_GetY(hw))) + c);
 }
 
-int main(int argc, char **argv) { HW_start("Test", 900, 600, user_loop); }
+int main(int argc, char **argv) {
+  // HW_start("Test", 900, 600, user_loop);
+  VECT_test();
+  return 0;
+}
