@@ -1,10 +1,3 @@
-/*
- *  render.h
- *
- *  Created on: 22/04/2020
- *      Author: RAVENEL P
- */
-
 #ifndef _RENDER_H_
 #define _RENDER_H_
 
@@ -12,7 +5,10 @@
  * Includes
  ******************************************************************************/
 
+#include "color.h"
 #include "geo.h"
+#include "mesh.h"
+
 #include <stdint.h>
 
 /*******************************************************************************
@@ -25,7 +21,7 @@
 
 struct Render {
   /*data*/
-  struct Triangle *mesh;
+  struct Mesh *mesh;
 
   /*Plan*/
   unsigned int xmax;
@@ -62,7 +58,7 @@ struct Render *RD_Init(unsigned int xmax, unsigned int ymax);
 void RD_CalcRayDir(struct Render *rd, unsigned int sx, unsigned int sy,
                    struct Vector *ray);
 
-int RD_RayTraceOnce(struct Render *rd, struct Vector *ray);
+color RD_RayTraceOnce(struct Render *rd, struct Vector *ray);
 
 void RD_Print(struct Render *rd);
 

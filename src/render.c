@@ -1,16 +1,12 @@
-/*
- * render.c
- *
- *  Created on: 22/04/2020
- *      Author: RAVENEL Pierre
- */
-
 /*******************************************************************************
  * Includes
  ******************************************************************************/
 
 #include "render.h"
+#include "color.h"
 #include "geo.h"
+#include "mesh.h"
+
 #include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -36,10 +32,7 @@
 struct Render *RD_Init(unsigned int xmax, unsigned int ymax) {
   struct Render *ret = malloc(sizeof(struct Render));
 
-  ret->mesh = malloc(sizeof(struct Triangle) * 1);
-  VECT_Set(&ret->mesh->a, 10, -10, 10);
-  VECT_Set(&ret->mesh->b, -10, 10, 10);
-  VECT_Set(&ret->mesh->c, -10, -10, 10);
+  ret->mesh = MESH_InitTetrahedron();
 
   ret->xmax = xmax;
   ret->ymax = ymax;
@@ -55,8 +48,12 @@ struct Render *RD_Init(unsigned int xmax, unsigned int ymax) {
 }
 
 void RD_Print(struct Render *rd) {
-  printf("wp : ");
+  printf(" ============ RENDER =========== \n");
+  printf("\tVECT CAM: ");
   VECT_Print(&rd->cam_wp);
+  printf("\n");
+  printf("\tMESH: \n");
+  MESH_Print(rd->mesh);
   printf("\n");
 }
 
@@ -91,12 +88,25 @@ void RD_CalcRayDir(struct Render *rd, unsigned int sx, unsigned int sy,
   // Vec3f ray_dir = normalize(x * u + y * (-v) + w_p);
 }
 
-int RD_RayTraceOnce(struct Render *rd, struct Vector *ray) {
+color RD_RayTraceOnce(struct Render *rd, struct Vector *ray) {
   struct Vector x;
-  if (RayIntersectsTriangle(&rd->cam_pos, ray, rd->mesh, &x)) {
-    return 1;
+  color best_c = CL_rgb(0, 0, 0);
+  double best_dist = 9999999;
+
+  for (unsigned int i_face = 0; i_face < rd->mesh->nb_faces; i_face++) {
+    static struct Triangle tr;
+    VECT_Cpy(&tr.a, rd->mesh->faces[i_face].p0);
+    VECT_Cpy(&tr.b, rd->mesh->faces[i_face].p1);
+    VECT_Cpy(&tr.c, rd->mesh->faces[i_face].p2);
+    if (RayIntersectsTriangle(&rd->cam_pos, ray, &tr, &x)) {
+      double d = VECT_Distance(&rd->cam_pos, &x);
+      if (d < best_dist) {
+        best_c = rd->mesh->faces[i_face].color;
+        best_dist = d;
+      }
+    }
   }
-  return 0;
+  return best_c;
 }
 
 /*

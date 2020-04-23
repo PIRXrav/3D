@@ -1,8 +1,15 @@
+#ifndef _MESH_H_
+#define _MESH_H_
+
 /*******************************************************************************
  * Includes
  ******************************************************************************/
 
 #include "color.h"
+#include "geo.h"
+
+#include <stdbool.h>
+#include <stdint.h>
 
 /*******************************************************************************
  * Macros
@@ -12,26 +19,39 @@
  * Types
  ******************************************************************************/
 
-/*******************************************************************************
- * Internal function declaration
- ******************************************************************************/
+struct MeshFace {
+  struct Vector *p0, *p1, *p2; // Uniquement des triangles
+  color color;
+};
+
+struct MeshEdges {
+  struct Vector *p0, *p1;
+};
+
+struct Mesh {
+
+  unsigned int nb_vertices;
+  struct Vector *vertices;
+  unsigned int nb_faces;
+  struct MeshFace *faces;
+
+  struct Vector origin;
+};
 
 /*******************************************************************************
  * Variables
  ******************************************************************************/
 
 /*******************************************************************************
- * Public function
+ * Prototypes
  ******************************************************************************/
 
-color CL_rgb(uint8_t r, uint8_t g, uint8_t b) {
-  return CL_rgba(r, g, b, CL_ALPHA_OPAQUE);
-}
+/*
+ * Initialise un tetrahedre
+ * https://en.wikipedia.org/wiki/Tetrahedron
+ */
+struct Mesh *MESH_InitTetrahedron(void);
 
-color CL_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
-  return (color)(struct color_rgb){b, g, r, a};
-}
+void MESH_Print(struct Mesh *mesh);
 
-/*******************************************************************************
- * Internal function
- ******************************************************************************/
+#endif /* _GEO_H_ */
