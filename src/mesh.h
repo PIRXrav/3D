@@ -54,7 +54,7 @@ struct Mesh *MESH_Init();
  * Initialise un tetrahedre
  * https://en.wikipedia.org/wiki/Tetrahedron
  */
-struct Mesh *MESH_InitTetrahedron(void);
+struct Mesh *MESH_InitTetrahedron(struct Vector *origin);
 
 void MESH_Print(struct Mesh *mesh);
 
