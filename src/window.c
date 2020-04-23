@@ -114,9 +114,9 @@ extern void HW_SetPx(struct hwindow *hw, unsigned int x, unsigned int y,
                      uint8_t r, uint8_t g, uint8_t b) {
   assert(x < hw->width && y < hw->height);
   const unsigned int offset = (hw->width * 4 * y) + x * 4;
-  hw->pixels[offset + 0] = r;                // b
+  hw->pixels[offset + 0] = b;                // b
   hw->pixels[offset + 1] = g;                // g
-  hw->pixels[offset + 2] = b;                // r
+  hw->pixels[offset + 2] = r;                // r
   hw->pixels[offset + 3] = SDL_ALPHA_OPAQUE; // a
 }
 

@@ -3,7 +3,7 @@
 ---
 
 ### Affichage d'une matrice de pixel OK
+### Intersection de triangles / lignes OK
+### Raytracing (Debut)
 ### Lecture de fichiers 3D
-### Intersection de triangles / lignes
-### Raytracing
 ### Lumière, reflection et ombres
