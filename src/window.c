@@ -9,14 +9,13 @@
  * Includes
  ******************************************************************************/
 
+#include "window.h"
 #include <SDL2/SDL.h>
 #include <assert.h>
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#include "window.h"
 
 /*******************************************************************************
  * Macros
@@ -25,6 +24,11 @@
 /*******************************************************************************
  * Types
  ******************************************************************************/
+
+/*
+ * PIXEL : bgra
+ */
+typedef color pixel;
 
 /*
  * Structure window
@@ -37,7 +41,7 @@ struct hwindow {
   SDL_Renderer *renderer;
   SDL_Texture *texture;
   /* Buffer */
-  unsigned char *pixels;
+  pixel *pixels;
   unsigned int width;
   unsigned int height;
   /* State */
@@ -111,13 +115,9 @@ extern void HW_start(const char *name, unsigned int x, unsigned int y,
  *  Mise a jour d'un pixel dans le buffer
  */
 extern void HW_SetPx(struct hwindow *hw, unsigned int x, unsigned int y,
-                     uint8_t r, uint8_t g, uint8_t b) {
+                     color c) {
   assert(x < hw->width && y < hw->height);
-  const unsigned int offset = (hw->width * 4 * y) + x * 4;
-  hw->pixels[offset + 0] = b;                // b
-  hw->pixels[offset + 1] = g;                // g
-  hw->pixels[offset + 2] = r;                // r
-  hw->pixels[offset + 3] = SDL_ALPHA_OPAQUE; // a
+  hw->pixels[(hw->width * y) + x] = c;
 }
 
 /*
@@ -172,7 +172,7 @@ static struct hwindow *HW_Init(const char *name, unsigned int width,
   ret->texture = SDL_CreateTexture(ret->renderer, SDL_PIXELFORMAT_ARGB8888,
                                    SDL_TEXTUREACCESS_STREAMING, width, height);
 
-  ret->pixels = malloc(width * height * 4);
+  ret->pixels = malloc(width * height * sizeof(color));
   assert(ret->pixels);
   return ret;
 }
@@ -195,7 +195,7 @@ static void HW_Close(struct hwindow *hw) {
 static void HW_Render(struct hwindow *hw) {
   // SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
   // SDL_RenderClear(renderer);
-  SDL_UpdateTexture(hw->texture, NULL, &(hw->pixels[0]), hw->width * 4);
+  SDL_UpdateTexture(hw->texture, NULL, hw->pixels, hw->width * 4);
   SDL_RenderCopy(hw->renderer, hw->texture, NULL, NULL);
   SDL_RenderPresent(hw->renderer);
 }

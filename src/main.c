@@ -1,3 +1,4 @@
+#include "color.h"
 #include "geo.h"
 #include "render.h"
 #include "window.h"
@@ -9,15 +10,15 @@ const unsigned int Y = 300;
 struct Render *rd;
 
 void user_loop(struct hwindow *hw) {
-  /*
+
   static int c = 0;
   c++;
   for (unsigned int i = 0; i < HW_GetX(hw); i++)
     for (unsigned int j = 0; j < HW_GetY(hw); j++)
-      HW_SetPx(hw, i, j, (int)(255 * i / HW_GetX(hw)),
-               (int)(255 * j / HW_GetY(hw)),
-               (int)(255 * (i + j) / (HW_GetX(hw) + HW_GetY(hw))) + c);
-               */
+      HW_SetPx(hw, i, j,
+               CL_rgb(255 * i / HW_GetX(hw), 255 * j / HW_GetY(hw),
+                      255 * (i + j) / (HW_GetX(hw) + HW_GetY(hw)) + c));
+  return;
   static struct Vector ray;
 
   static double angle = 0;
@@ -47,9 +48,9 @@ void user_loop(struct hwindow *hw) {
       RD_CalcRayDir(rd, x, y, &ray);
       if (RD_RayTraceOnce(rd, &ray)) {
         // printf("##");
-        HW_SetPx(hw, x, y, 0x22, 0xBA, 0xBA);
+        HW_SetPx(hw, x, y, CL_BABA);
       } else {
-        HW_SetPx(hw, x, y, 0, 0, 0);
+        HW_SetPx(hw, x, y, CL_WHITE);
         // printf("--");
       }
     }

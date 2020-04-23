@@ -1,29 +1,34 @@
-/*
- *  window.h
- *
- *  Created on: 21/04/2020
- *      Author: RAVENEL P
- */
-
-#ifndef _WINDOW_H_
-#define _WINDOW_H_
+#ifndef _COLOR_H_
+#define _COLOR_H_
 
 /*******************************************************************************
  * Includes
  ******************************************************************************/
 
-#include "color.h"
+#include "colornames.h"
 #include <stdint.h>
 
 /*******************************************************************************
  * Macros
  ******************************************************************************/
 
+#define CL_ALPHA_OPAQUE 0xFF
+#define CL_ALPHA_TRANSPARENT 0
+
 /*******************************************************************************
  * Types
  ******************************************************************************/
 
-struct hwindow;
+struct color_rgb {
+  uint8_t b, g, r, a;
+};
+
+union color {
+  uint32_t raw;
+  struct color_rgb rgb;
+};
+
+typedef union color color;
 
 /*******************************************************************************
  * Variables
@@ -33,30 +38,8 @@ struct hwindow;
  * Prototypes
  ******************************************************************************/
 
-/*
- *  Lancement et Initialisation de la fenetre
- */
-void HW_start(const char *name, unsigned int x, unsigned int y,
-              void (*userfunc)(struct hwindow *));
+color CL_rgb(uint8_t r, uint8_t g, uint8_t b);
 
-/*
- *  Mise a jour d'un pixel dans le buffer
- */
-void HW_SetPx(struct hwindow *hw, unsigned int x, unsigned int y, color c);
+color CL_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 
-/*
- * Affichage des informations de debug
- */
-void HW_Print(struct hwindow *hw);
-
-/*
- *  get xmax
- */
-unsigned int HW_GetX(struct hwindow *hw);
-
-/*
- *  get ymax
- */
-unsigned int HW_GetY(struct hwindow *hw);
-
-#endif /* _WINDOW_H_ */
+#endif /* _COLOR_H_ */
