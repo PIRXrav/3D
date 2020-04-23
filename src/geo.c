@@ -66,10 +66,21 @@ char VECT_Eq(const struct Vector *a, const struct Vector *b) {
 }
 
 /*
+ * Distance au carre entre deux points
+ */
+float VECT_DistanceSquare(const struct Vector *a, const struct Vector *b) {
+  static double d1, d2, d3;
+  d1 = (a->x - b->x);
+  d2 = (a->y - b->y);
+  d3 = (a->z - b->z);
+  return d1 * d1 + d2 * d2 + d3 * d3;
+}
+
+/*
  * Distance entre deux points
  */
 float VECT_Distance(const struct Vector *a, const struct Vector *b) {
-  return sqrt(pow(a->x - b->x, 2) + pow(a->y - b->y, 2) + pow(a->z - b->z, 2));
+  return sqrt(VECT_DistanceSquare(a, b));
 }
 
 /*

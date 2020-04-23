@@ -44,7 +44,7 @@ void MESH_FACE_Set(struct MeshFace *mf, struct Vector *p0, struct Vector *p1,
  * Initialise un tetrahedre
  * https://en.wikipedia.org/wiki/Tetrahedron
  */
-struct Mesh *MESH_InitTetrahedron(void) {
+struct Mesh *MESH_InitTetrahedron(struct Vector *origin) {
   struct Mesh *p = malloc(sizeof(struct Mesh));
   p->nb_vertices = 4;
   p->vertices = malloc(sizeof(struct Vector) * p->nb_vertices);
@@ -52,6 +52,11 @@ struct Mesh *MESH_InitTetrahedron(void) {
   VECT_Set(&p->vertices[1], 1, 0, 0);
   VECT_Set(&p->vertices[2], 0, 1, 0);
   VECT_Set(&p->vertices[3], 0, 0, 1);
+
+  for (unsigned int i = 0; i < 4; i++) {
+    VECT_Add(&p->vertices[i], &p->vertices[i], origin);
+  }
+
   p->nb_faces = 4;
   p->faces = malloc(sizeof(struct MeshFace) * p->nb_faces);
   MESH_FACE_Set(&p->faces[0], &p->vertices[0], &p->vertices[1], &p->vertices[2],
@@ -74,6 +79,13 @@ void MESH_Print(struct Mesh *mesh) {
     VECT_Print(mesh->faces[i_face].p2);
     printf("}\n");
   }
+}
+
+/*
+ * Translate le mesh suivant le vecteur depl
+ */
+void MESH_Translate(struct Mesh *mesh, struct vecteur *depl) {
+  ; // TODO
 }
 /*******************************************************************************
  * Variables
