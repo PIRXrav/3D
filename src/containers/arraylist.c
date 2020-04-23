@@ -46,7 +46,7 @@ void ARRLIST_Free(ArrayList *list) {
 }
 
 size_t ARRLIST_Fit(ArrayList *list) {
-  ARRLIST_SetCapacity(list, list->number);
+  ARRLIST_SetCapacity(list, list->number ? list->number : 1);
   return list->number;
 }
 
