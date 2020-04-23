@@ -21,12 +21,16 @@
  ******************************************************************************/
 
 /*
- * Initialise un tétrahedre a partir d'un fichier
+ * Initialise une mesh vide
  */
-struct Mesh *MESH_Init(const char *namefile) {
-  struct Mesh *ret = malloc(sizeof(struct Mesh));
-  ; // TODO
-  return ret;
+struct Mesh *MESH_Init() {
+  struct Mesh *m = malloc(sizeof(struct Mesh));
+  m->nb_vertices = 0;
+  m->vertices = NULL;
+  m->nb_faces = 0;
+  m->faces = NULL;
+  VECT_Set(&m->origin, 0, 0, 0);
+  return m;
 }
 
 /*

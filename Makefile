@@ -1,14 +1,19 @@
 CC = gcc
 LD = gcc
-CFLAGS = -Wall -Wextra -g -O2 -Iinclude/ -fPIC
+CFLAGS = -Wall -Wextra -g -O2 -Iinclude/ -Isrc/
 LDFLAGS = -L./lib -I./include -lSDL2-2.0 -lm
 EXEC = main
-SRC=$(wildcard src/*.c)
+SRC=$(shell find src/ -type f -name '*.c')
 OBJ=$(patsubst src/%.c,obj/%.o,$(SRC))
+DIRS=obj obj/containers obj/parsers
 
 # .PHONY: tests
 
-all: $(EXEC)
+all: $(DIRS) $(EXEC)
+
+$(DIRS): %:
+	mkdir -p $@
+
 
 $(EXEC): $(OBJ)
 	$(CC) -o $@ $^ $(LDFLAGS)

@@ -1,15 +1,10 @@
-#ifndef _MESH_H_
-#define _MESH_H_
+#ifndef _VECTOR_H_
+#define _VECTOR_H_
 
 /*******************************************************************************
  * Includes
  ******************************************************************************/
-
-#include "color.h"
-#include "geo.h"
-
-#include <stdbool.h>
-#include <stdint.h>
+#include <stdlib.h>
 
 /*******************************************************************************
  * Macros
@@ -18,26 +13,8 @@
 /*******************************************************************************
  * Types
  ******************************************************************************/
-
-struct MeshFace {
-  struct Vector *p0, *p1, *p2; // Uniquement des triangles
-  color color;
-};
-
-struct MeshEdges {
-  struct Vector *p0, *p1;
-};
-
-struct Mesh {
-
-  unsigned int nb_vertices;
-  struct Vector *vertices;
-  unsigned int nb_faces;
-  struct MeshFace *faces;
-
-  struct Vector origin;
-};
-
+struct ArrayList;
+typedef struct ArrayList ArrayList;
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -45,17 +22,16 @@ struct Mesh {
 /*******************************************************************************
  * Prototypes
  ******************************************************************************/
-/*
- * Initialise une mesh vide
- */
-struct Mesh *MESH_Init();
 
-/*
- * Initialise un tetrahedre
- * https://en.wikipedia.org/wiki/Tetrahedron
- */
-struct Mesh *MESH_InitTetrahedron(void);
+ArrayList *ARRLIST_Create(size_t elementSize);
+void ARRLIST_Free(ArrayList *list);
 
-void MESH_Print(struct Mesh *mesh);
+size_t ARRLIST_Add(ArrayList *list, void *element);
+void *ARRLIST_Get(const ArrayList *list, size_t index);
+size_t ARRLIST_GetSize(const ArrayList *list);
 
-#endif /* _GEO_H_ */
+size_t ARRLIST_Fit(ArrayList *list);
+void *ARRLIST_GetData(ArrayList *list);
+void ARRLIST_SetCapacity(ArrayList *list, size_t capacity);
+
+#endif /* _VECTOR_H_ */
