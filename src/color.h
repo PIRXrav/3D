@@ -12,7 +12,7 @@
 /*******************************************************************************
  * Macros
  ******************************************************************************/
-#define IS_BIG_ENDIAN (!*(unsigned char *)&(uint16_t){1})
+#define IS_BIG_ENDIAN 0
 
 #define CL_ALPHA_OPAQUE 0xFF
 #define CL_ALPHA_TRANSPARENT 0
@@ -22,11 +22,7 @@
  ******************************************************************************/
 
 struct color_rgb {
-#ifdef IS_BIG_ENDIAN
   uint8_t b, g, r, a;
-#else
-  uint8_t a, r, g, b;
-#endif
 };
 
 union color {
