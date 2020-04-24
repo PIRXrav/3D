@@ -215,9 +215,9 @@ static void HW_EventLoop(struct hwindow *hw) {
 
   static SDL_Event event;
   static struct event customEvent;
-  memset(&customEvent, 0, sizeof(customEvent));
 
   while (SDL_PollEvent(&event)) {
+    memset(&customEvent, 0, sizeof(customEvent));
     switch (event.type) {
     case SDL_QUIT:
       customEvent.type = EVENT_WINDOW;
