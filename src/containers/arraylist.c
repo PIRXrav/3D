@@ -77,7 +77,12 @@ void *ARRLIST_Get(const ArrayList *list, size_t index) {
 }
 
 int ARRLIST_Search(const ArrayList *list, const void *element) {
-  for (unsigned i = 0; i < list->number; i++) {
+  return ARRLIST_SearchFrom(list, 0, element);
+}
+
+int ARRLIST_SearchFrom(const ArrayList *list, unsigned start,
+                       const void *element) {
+  for (unsigned i = start; i < list->number; i++) {
     if (!memcmp(ARRLIST_Get(list, i), element, list->elementSize))
       return i;
   }

@@ -38,6 +38,11 @@ size_t ARRLIST_GetSize(const ArrayList *list);
 /* Cherche un element dans le tableau, retourne l'indice du premier element ou
  * -1 si aucun element ne correspond  */
 int ARRLIST_Search(const ArrayList *list, const void *element);
+/* Cherche un element dans le tableau a a partir de l'indice start, retourne
+ * l'indice du premier element ou -1 si aucun element ne correspond  */
+int ARRLIST_SearchFrom(const ArrayList *list, unsigned start,
+                       const void *element);
+
 /* Vide la liste */
 void ARRLIST_Clear(ArrayList *list);
 
