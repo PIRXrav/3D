@@ -7,6 +7,7 @@
 
 #include "colornames.h"
 #include <stdint.h>
+#include <stdlib.h>
 
 /*******************************************************************************
  * Macros
@@ -41,5 +42,7 @@ typedef union color color;
 color CL_rgb(uint8_t r, uint8_t g, uint8_t b);
 
 color CL_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+
+color CL_Random();
 
 #endif /* _COLOR_H_ */
