@@ -124,17 +124,39 @@ static bool RD_RayTraceOnMesh(const struct Mesh *mesh,
                               const struct Vector *cam_pos,
                               const struct Vector *cam_ray, struct Vector *x,
                               double *distance, struct MeshFace **face) {
-  bool hit = false;
+  static bool hit;
+  static double d;
+  static struct MeshFace *mf;
+
+  hit = false;
   for (unsigned int i_face = 0; i_face < MESH_GetNbFace(mesh); i_face++) {
-    struct Triangle *tr =
-        MESH_FACE_ToTriangleStatique(MESH_GetFace(mesh, i_face));
-    if (RayIntersectsTriangle(cam_pos, cam_ray, tr, x)) {
-      double d = VECT_DistanceSquare(cam_pos, x);
+    mf = MESH_GetFace(mesh, i_face);
+    if (RayIntersectsTriangle(cam_pos, cam_ray, mf->p0, mf->p1, mf->p2, x)) {
+      d = VECT_DistanceSquare(cam_pos, x);
       if (d < *distance) {
         *face = MESH_GetFace(mesh, i_face);
         *distance = d;
         hit = true;
       }
+    }
+  }
+  return hit;
+}
+
+/*
+ * Intersection d'un rayon avec toutes les meshs, on retourne le point, la face
+ * et la mesh en collision
+ */
+extern bool RD_RayCastOnRD(const struct Render *rd, const struct Vector *ray,
+                           struct Vector *x, struct Mesh **mesh,
+                           struct MeshFace **face) {
+  double distance = 99999999; // Max dist
+  int hit = false;
+  for (unsigned int i_mesh = 0; i_mesh < rd->nb_meshs; i_mesh++) {
+    if (RD_RayTraceOnMesh(rd->meshs[i_mesh], &rd->cam_pos, ray, x, &distance,
+                          face)) {
+      hit = true;
+      *mesh = rd->meshs[i_mesh];
     }
   }
   return hit;
@@ -155,25 +177,6 @@ extern color RD_RayTraceOnRD(const struct Render *rd, const struct Vector *ray,
     return face->color;
   }
   return CL_BLACK; // background color
-}
-
-/*
- * Intersection d'un rayon avec toutes les meshs, on retourne le point, la face
- * et la mesh en collision
- */
-extern bool RD_RayCastOnRD(const struct Render *rd, const struct Vector *ray,
-                           struct Vector *x, struct Mesh **mesh,
-                           struct MeshFace **face) {
-  double distance = 99999999; // Max dist
-  int hit = false;
-  for (unsigned int i_mesh = 0; i_mesh < rd->nb_meshs; i_mesh++) {
-    if (RD_RayTraceOnMesh(rd->meshs[i_mesh], &rd->cam_pos, ray, x, &distance,
-                          face)) {
-      hit = true;
-      *mesh = rd->meshs[i_mesh];
-    }
-  }
-  return hit;
 }
 
 /*

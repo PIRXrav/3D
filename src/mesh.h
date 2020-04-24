@@ -73,7 +73,4 @@ extern void MESH_SetName(Mesh *mesh, const char *name);
 extern Mesh *MESH_InitTetrahedron(MeshVertex *origin);
 extern void MESH_Print(const Mesh *mesh);
 
-// extra
-extern struct Triangle *MESH_FACE_ToTriangleStatique(MeshFace *mf);
-
 #endif /* _GEO_H_ */

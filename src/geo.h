@@ -29,12 +29,6 @@ struct Vector {
   double z;
 };
 
-struct Triangle {
-  struct Vector a;
-  struct Vector b;
-  struct Vector c;
-};
-
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -125,9 +119,10 @@ double VECT_Angle(const struct Vector *a, const struct Vector *b);
  */
 bool RayIntersectsTriangle(const struct Vector *rayOrigin,
                            const struct Vector *rayVector,
-                           const struct Triangle *triangle,
+                           const struct Vector *trpoint0,
+                           const struct Vector *trpoint1,
+                           const struct Vector *trpoint2,
                            struct Vector *outIntersectionPoint);
-
 void VECT_test(void);
 
 #endif /* _GEO_H_ */

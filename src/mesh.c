@@ -90,17 +90,6 @@ struct MeshFace *MESH_FACE_SetStatic(struct Vector *p0, struct Vector *p1,
   return &mf;
 }
 */
-/*
- * Retourne une instance statique du triangle géometrique
- */
-
-extern struct Triangle *MESH_FACE_ToTriangleStatique(MeshFace *mf) {
-  static struct Triangle tr;
-  VECT_Cpy(&tr.a, mf->p0);
-  VECT_Cpy(&tr.b, mf->p1);
-  VECT_Cpy(&tr.c, mf->p2);
-  return &tr;
-}
 
 /*
  * Retourne le nombre de faces du mesh

@@ -179,14 +179,17 @@ double VECT_Angle(const struct Vector *a, const struct Vector *b) {
  */
 bool RayIntersectsTriangle(const struct Vector *rayOrigin,
                            const struct Vector *rayVector,
-                           const struct Triangle *triangle,
+                           const struct Vector *trpoint0,
+                           const struct Vector *trpoint1,
+                           const struct Vector *trpoint2,
                            struct Vector *outIntersectionPoint) {
   const double EPSILON = 0.0000001;
 
-  struct Vector edge1, edge2, h, s, q, rab;
-  double a, f, u, v;
-  VECT_Sub(&edge1, &triangle->b, &triangle->a);
-  VECT_Sub(&edge2, &triangle->c, &triangle->a);
+  static struct Vector edge1, edge2, h, s, q, rab;
+  static double a, f, u, v;
+
+  VECT_Sub(&edge1, trpoint1, trpoint0);
+  VECT_Sub(&edge2, trpoint2, trpoint0);
   VECT_CrossProduct(&h, rayVector, &edge2);
   a = VECT_DotProduct(&edge1, &h);
 
@@ -194,7 +197,7 @@ bool RayIntersectsTriangle(const struct Vector *rayOrigin,
     return false; // Le rayon est parallèle au triangle.
 
   f = 1.0 / a;
-  VECT_Sub(&s, rayOrigin, &triangle->a);
+  VECT_Sub(&s, rayOrigin, trpoint0);
 
   u = f * VECT_DotProduct(&s, &h);
   if (u < 0.0 || u > 1.0)
@@ -229,7 +232,6 @@ void VECT_test(void) {
   struct Vector p0 = {0, 0, 0};
   struct Vector p1 = {1, 0, 0};
   struct Vector p2 = {0, 1, 0};
-  struct Triangle triangle = {p0, p1, p2};
 
   const struct Vector INTERSECT_POINT = {0.01, 0.2, 0};
 
@@ -238,7 +240,7 @@ void VECT_test(void) {
   VECT_Sub(&cam_vect, &INTERSECT_POINT, &cam_pos);
 
   struct Vector intersect_point_result = {0, 0, 0};
-  bool res = RayIntersectsTriangle(&cam_pos, &cam_vect, &triangle,
+  bool res = RayIntersectsTriangle(&cam_pos, &cam_vect, &p0, &p1, &p2,
                                    &intersect_point_result);
   VECT_Print(&intersect_point_result);
   printf("RES %d", res);
