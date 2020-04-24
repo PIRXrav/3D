@@ -69,12 +69,20 @@ size_t ARRLIST_Add(ArrayList *list, void *element) {
   return ++list->number;
 }
 
+void ARRLIST_Clear(ArrayList *list) { list->number = 0; }
+
 void *ARRLIST_Get(const ArrayList *list, size_t index) {
   assert(index < list->number);
   return list->data + list->elementSize * index;
 }
 size_t ARRLIST_GetSize(const ArrayList *list) { return list->number; }
 void *ARRLIST_GetData(ArrayList *list) { return list->data; }
+
+void *ARRLIST_ToArray(ArrayList *list) {
+  void *data = list->data;
+  free(list);
+  return data;
+}
 
 /*******************************************************************************
  * Internal function
