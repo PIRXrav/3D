@@ -1,6 +1,6 @@
 CC = gcc
 LD = gcc
-CFLAGS = -Wall -Wextra -Werror -g -O2 -Iinclude/ -Isrc/
+CFLAGS = -Wall -Wextra  -g -Iinclude/ -Isrc/ -fno-stack-protector
 LDFLAGS = -L./lib -I./include -lSDL2-2.0 -lm
 EXEC = bin/main
 SRC=$(shell find src/ -type f -name '*.c')
