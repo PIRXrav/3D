@@ -60,7 +60,7 @@ void ARRLIST_SetCapacity(ArrayList *list, size_t capacity) {
   list->capacity = capacity;
 }
 
-void *ARRLIST_Add(ArrayList *list, void *element) {
+void *ARRLIST_Add(ArrayList *list, const void *element) {
   if (list->number == list->capacity)
     ARRLIST_SetCapacity(list, list->capacity * 2);
 
@@ -76,7 +76,7 @@ void *ARRLIST_Get(const ArrayList *list, size_t index) {
   return list->data + list->elementSize * index;
 }
 
-int ARRLIST_Search(const ArrayList *list, void *element) {
+int ARRLIST_Search(const ArrayList *list, const void *element) {
   for (unsigned i = 0; i < list->number; i++) {
     if (!memcmp(ARRLIST_Get(list, i), element, list->elementSize))
       return i;
