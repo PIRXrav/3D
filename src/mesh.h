@@ -77,6 +77,12 @@ struct MeshFace *MESH_GetFace(const struct Mesh *mesh, size_t index);
  */
 struct Vector *MESH_GetVertice(const struct Mesh *mesh, size_t index);
 
+/*
+ *  Ajoute une face au mesh
+ */
+struct MeshFace *MESH_AddFace(struct Mesh *mesh, const struct Vector *vertices,
+                              size_t nb_vertices, color c);
+
 struct Triangle *MESH_FACE_ToTriangleStatique(struct MeshFace *mf);
 
 void MESH_Print(struct Mesh *mesh);

@@ -112,9 +112,8 @@ static struct Vector *MESH_AddVertex(struct Mesh *mesh,
 /*
  *  Ajoute une face au mesh
  */
-static struct MeshFace *MESH_AddFace(struct Mesh *mesh,
-                                     const struct Vector *vertices,
-                                     size_t nb_vertices, color c) {
+struct MeshFace *MESH_AddFace(struct Mesh *mesh, const struct Vector *vertices,
+                              size_t nb_vertices, color c) {
   assert(nb_vertices == 3);
   return ARRLIST_Add(
       mesh->faces, MESH_FACE_SetStatic(MESH_AddVertex(mesh, &vertices[0]),
