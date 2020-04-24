@@ -30,14 +30,14 @@ ArrayList *ARRLIST_Create(size_t elementSize);
 void ARRLIST_Free(ArrayList *list);
 
 /* Ajout d'un element a la liste, retourne l'adresse de l'element ajoute */
-void *ARRLIST_Add(ArrayList *list, void *element);
+void *ARRLIST_Add(ArrayList *list, const void *element);
 /* Acces a un element de la liste via son indice */
 void *ARRLIST_Get(const ArrayList *list, size_t index);
 /* Retourne le nombre d'elements de la liste */
 size_t ARRLIST_GetSize(const ArrayList *list);
 /* Cherche un element dans le tableau, retourne l'indice du premier element ou
  * -1 si aucun element ne correspond  */
-int ARRLIST_Search(const ArrayList *list, void *element);
+int ARRLIST_Search(const ArrayList *list, const void *element);
 /* Vide la liste */
 void ARRLIST_Clear(ArrayList *list);
 
