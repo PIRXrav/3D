@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /*******************************************************************************
  * Macros
@@ -120,13 +121,19 @@ struct MeshFace *MESH_AddFace(struct Mesh *mesh, const struct Vector *vertex0,
                                          MESH_AddVertex(mesh, vertex2), c));
 }
 
+/* Definit le nom de la mesh */
+void MESH_SetName(struct Mesh *mesh, const char *name) {
+  mesh->name = realloc(mesh->name, strlen(name) + 1);
+  strcpy(mesh->name, name);
+}
+
 /*
  * Initialise un tetrahedre
  * https://en.wikipedia.org/wiki/Tetrahedron
  */
 struct Mesh *MESH_InitTetrahedron(struct Vector *origin) {
   struct Mesh *p = MESH_Init();
-  p->name = "Tetrahedron";
+  MESH_SetName(p, "Tetrahedron");
 
   struct Vector o = {0, 0, 0};
   struct Vector x = {1, 0, 0};

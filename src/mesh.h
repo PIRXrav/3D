@@ -60,6 +60,9 @@ struct Mesh *MESH_InitTetrahedron(struct Vector *origin);
  */
 size_t MESH_GetNbFace(const struct Mesh *mesh);
 
+/* Definit le nom de la mesh */
+void MESH_SetName(struct Mesh *mesh, const char *name);
+
 /*
  * Retourne le nombre de sommets du mesh
  */

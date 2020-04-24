@@ -59,6 +59,7 @@ struct Mesh **OBJ_Parse(FILE *file, unsigned *nbMeshes) {
   ArrayList *meshes = ARRLIST_Create(sizeof(struct Mesh *));
 
   *nbMeshes = 0;
+  int faceIndex = 0;
 
   while ((entity = getNextEntity(buffer, 256, file)) != BLANK) {
 
@@ -81,14 +82,22 @@ struct Mesh **OBJ_Parse(FILE *file, unsigned *nbMeshes) {
 
       MESH_AddFace(currentMesh, ARRLIST_Get(vertices, verticesIndex[0]),
                    ARRLIST_Get(vertices, verticesIndex[1]),
-                   ARRLIST_Get(vertices, verticesIndex[2]), CL_Random());
+                   ARRLIST_Get(vertices, verticesIndex[2]),
+                   CL_rgb(50 + faceIndex * 2, faceIndex * 2, 50 + faceIndex));
+      faceIndex++;
       break;
     case OBJECT:
       // Nouvelle mesh : on ajoute la precedente a la liste et on travaille sur
       // une nouvelle
-      if (currentMesh)
+      if (currentMesh) {
         ARRLIST_Add(meshes, &currentMesh);
+      }
       currentMesh = MESH_Init();
+      strtok(buffer, " ");
+      char *name = strtok(NULL, " ");
+      MESH_SetName(currentMesh, name);
+      faceIndex = 0;
+
       break;
     default:
       fprintf(stderr, "[OBJ_Parse] Warning : unsupported entity\n");
