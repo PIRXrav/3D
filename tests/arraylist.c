@@ -1,4 +1,4 @@
-#include "src/containers/arraylist.h"
+#include "containers/arraylist.h"
 #include <assert.h>
 
 typedef struct Data {
@@ -15,10 +15,13 @@ int main() {
   ARRLIST_SetCapacity(list, 100);
   ARRLIST_Fit(list);
 
-  for (int i = 0; i < 20; i++) {
+  for (int i = 0; i < ARRLIST_GetSize(list); i++) {
     Data *x = ARRLIST_Get(list, i);
     assert(x->x == i && x->y == i);
   }
+
+  ARRLIST_Clear(list);
+  assert(!ARRLIST_GetSize(list));
 
   ARRLIST_Free(list);
 
