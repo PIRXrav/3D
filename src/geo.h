@@ -42,6 +42,10 @@ struct Triangle {
 /*******************************************************************************
  * Prototypes
  ******************************************************************************/
+/*
+ * Initialisation d'un vecteur statique
+ */
+struct Vector *VECT_SetStatic(double x, double y, double z);
 
 /*
  * Initialisation de vecteur
@@ -57,6 +61,12 @@ struct Vector *VECT_Cpy(struct Vector *dest, const struct Vector *src);
  * Comparaison de vecteur
  */
 char VECT_Eq(const struct Vector *a, const struct Vector *b);
+
+/*
+ * Distance au carre entre deux points
+ */
+float VECT_DistanceSquare(const struct Vector *a, const struct Vector *b);
+
 /*
  * Distance entre deux points
  */

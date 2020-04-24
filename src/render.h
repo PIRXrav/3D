@@ -21,7 +21,8 @@
 
 struct Render {
   /*data*/
-  struct Mesh *mesh;
+  unsigned int nb_meshs;
+  struct Mesh **meshs; // Tableau de pointeur de mesh
 
   /*Plan*/
   unsigned int xmax;
@@ -51,6 +52,7 @@ struct Render {
  * Initialisation
  */
 struct Render *RD_Init(unsigned int xmax, unsigned int ymax);
+struct Render *RD_InitTetrahedrons(unsigned int xmax, unsigned int ymax);
 
 /*
  * Calcule d'une raie
@@ -58,7 +60,12 @@ struct Render *RD_Init(unsigned int xmax, unsigned int ymax);
 void RD_CalcRayDir(struct Render *rd, unsigned int sx, unsigned int sy,
                    struct Vector *ray);
 
-color RD_RayTraceOnce(struct Render *rd, struct Vector *ray);
+/*
+ * Intersection avec tout les meshs
+ * On retourne le point de croisement x
+ */
+color RD_RayTraceOnRD(const struct Render *rd, const struct Vector *ray,
+                      struct Vector *x);
 
 void RD_Print(struct Render *rd);
 
