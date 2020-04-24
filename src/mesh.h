@@ -30,7 +30,7 @@ struct MeshEdges {
 };
 
 struct Mesh {
-  const char *name;    // Le nom du mesh
+  char *name;          // Le nom du mesh
   ArrayList *vertices; // Vector
   ArrayList *faces;    // MeshFace
 
