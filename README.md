@@ -13,7 +13,7 @@
 - ~~Couleurs CL. Bugs de cast.~~
 - ~~Vecteur norme au carre.~~
 - ~~Tableau de meshs.~~
-- Init loop Window
+- ~~ Init loop Window ~~
 - Distance max raytracing !
 - Précalul w' raytracing
 - Normalisation Triangle Mesh et Triangle
