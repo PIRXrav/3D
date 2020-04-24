@@ -35,7 +35,7 @@ color CL_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
 color CL_Random() { return CL_rgb(rand(), rand(), rand()); }
 
 color CL_Negate(color c) {
-  return CL_rgba(255 - c.r, 255 - c.g, 255 - c.b, c.a);
+  return CL_rgba(255 - c.rgb.r, 255 - c.rgb.g, 255 - c.rgb.b, c.rgb.a);
 }
 
 /*******************************************************************************
