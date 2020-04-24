@@ -28,6 +28,8 @@ struct Render {
   unsigned int xmax;
   unsigned int ymax;
   double fov_rad;
+  struct Mesh *highlightedMesh;
+  struct MeshFace *highlightedFace;
 
   /* Raies */
   // struct Vecteur **raies_dir;
@@ -67,8 +69,16 @@ void RD_CalcRayDir(struct Render *rd, unsigned int sx, unsigned int sy,
  * Intersection avec tout les meshs
  * On retourne le point de croisement x
  */
-color RD_RayTraceOnRD(const struct Render *rd, const struct Vector *ray,
-                      struct Vector *x);
+extern color RD_RayTraceOnRD(const struct Render *rd, const struct Vector *ray,
+                             struct Vector *x);
+
+/*
+ * Intersection d'un rayon avec toutes les meshs, on retourne le point, la face
+ * et la mesh en collision
+ */
+extern bool RD_RayCastOnRD(const struct Render *rd, const struct Vector *ray,
+                           struct Vector *x, struct Mesh **m,
+                           struct MeshFace **face);
 
 void RD_Print(struct Render *rd);
 

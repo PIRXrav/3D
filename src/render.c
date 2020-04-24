@@ -38,6 +38,9 @@ struct Render *RD_Init(unsigned int xmax, unsigned int ymax) {
   ret->xmax = xmax;
   ret->ymax = ymax;
 
+  ret->highlightedMesh = NULL;
+  ret->highlightedFace = NULL;
+
   VECT_Set(&ret->cam_pos, -5, -5, 0);
   VECT_Set(&ret->cam_u, 1, 0, 0);
   VECT_Set(&ret->cam_v, 0, 1, 0);
@@ -133,14 +136,14 @@ void RD_CalcRayDir(struct Render *rd, unsigned int sx, unsigned int sy,
  * return bool : etat du succes. 1 si collision
  * vector x       : POint de croisement                     [OUT]
  * distanceSquare : la distance maximale (dernier valide).  [IN/OUT]
- * color          : La couleur du dernier valide.           [IN/OUT]
+ * face           : Pointeur sur la plus proche face pour l'instant [OUT]
  *
  * La couleur et la distance sont mit à jour si collision dans ce mesh
  */
 static bool RD_RayTraceOnMesh(const struct Mesh *mesh,
                               const struct Vector *cam_pos,
                               const struct Vector *cam_ray, struct Vector *x,
-                              double *distance, color *color) {
+                              double *distance, struct MeshFace **face) {
   bool hit = false;
   for (unsigned int i_face = 0; i_face < MESH_GetNbFace(mesh); i_face++) {
     struct Triangle *tr =
@@ -148,7 +151,7 @@ static bool RD_RayTraceOnMesh(const struct Mesh *mesh,
     if (RayIntersectsTriangle(cam_pos, cam_ray, tr, x)) {
       double d = VECT_DistanceSquare(cam_pos, x);
       if (d < *distance) {
-        *color = MESH_GetFace(mesh, i_face)->color;
+        *face = MESH_GetFace(mesh, i_face);
         *distance = d;
         hit = true;
       }
@@ -163,13 +166,34 @@ static bool RD_RayTraceOnMesh(const struct Mesh *mesh,
  */
 extern color RD_RayTraceOnRD(const struct Render *rd, const struct Vector *ray,
                              struct Vector *x) {
-  color color = CL_rgb(0, 0, 0); // background color
-  double distance = 99999;       // Max dist
-  for (unsigned int i_mesh = 0; i_mesh < rd->nb_meshs; i_mesh++) {
-    RD_RayTraceOnMesh(rd->meshs[i_mesh], &rd->cam_pos, ray, x, &distance,
-                      &color);
+
+  struct Mesh *mesh = NULL;
+  struct MeshFace *face = NULL;
+  if (RD_RayCastOnRD(rd, ray, x, &mesh, &face)) {
+    if (mesh == rd->highlightedMesh && face == rd->highlightedFace)
+      return CL_Negate(face->color);
+    return face->color;
   }
-  return color;
+  return CL_BLACK; // background color
+}
+
+/*
+ * Intersection d'un rayon avec toutes les meshs, on retourne le point, la face
+ * et la mesh en collision
+ */
+extern bool RD_RayCastOnRD(const struct Render *rd, const struct Vector *ray,
+                           struct Vector *x, struct Mesh **mesh,
+                           struct MeshFace **face) {
+  double distance = 99999999; // Max dist
+  int hit = false;
+  for (unsigned int i_mesh = 0; i_mesh < rd->nb_meshs; i_mesh++) {
+    if (RD_RayTraceOnMesh(rd->meshs[i_mesh], &rd->cam_pos, ray, x, &distance,
+                          face)) {
+      hit = true;
+      *mesh = rd->meshs[i_mesh];
+    }
+  }
+  return hit;
 }
 
 /*

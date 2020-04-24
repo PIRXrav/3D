@@ -3,7 +3,7 @@
 
 /* ARGB 0x([0-9A-F]{2})([0-9A-F]{2})([0-9A-F]{2})([0-9A-F]{2}) */
 
-#define ARGB_TO_COLOR(c) ((color)(unsigned int)(c))
+#define ARGB_TO_COLOR(c) ((union color)(unsigned int)(c))
 
 #define CL_ARGENT ARGB_TO_COLOR(0xFFC0C0C0)
 #define CL_BLANC ARGB_TO_COLOR(0xFFFFFFFF)

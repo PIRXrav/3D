@@ -10,6 +10,20 @@ const unsigned int X = 400;
 const unsigned int Y = 300;
 struct Render *rd;
 
+void mouse_event(const struct event *event) {
+  if (event->data.mouse.dx > 0 || event->data.mouse.dy > 0) {
+    struct Mesh *mesh = NULL;
+    struct MeshFace *face = NULL;
+    struct Vector ray, collisionPoint;
+    RD_CalcRayDir(rd, event->data.mouse.x, event->data.mouse.y, &ray);
+    RD_RayCastOnRD(rd, &ray, &collisionPoint, &mesh, &face);
+
+    printf("Mesh : %p, face : %p\n", mesh, face);
+    rd->highlightedMesh = mesh;
+    rd->highlightedFace = face;
+  }
+}
+
 void user_loop(struct hwindow *hw) {
   /*
   static int c = 0;
@@ -55,6 +69,7 @@ int main(void) {
   // HW_start("Test", 900, 600, user_loop);
   // VECT_test();
   rd = RD_Init(X, Y);
+  rd->highlightedMesh = 0;
   RD_Print(rd);
 
   unsigned nbMeshes;
@@ -65,7 +80,13 @@ int main(void) {
 
   // RD_Print(rd);
 
-  HW_start("Test", X, Y, user_loop);
+  struct hwindow *fenetre = HW_Init("Rendu 3D", X, Y);
+
+  HW_SetCallback(fenetre, EVENT_KEYBOARD, key_event);
+
+  HW_Loop(fenetre, user_loop);
+
+  HW_Close(fenetre);
 
   return 0;
 }

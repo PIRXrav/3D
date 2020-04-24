@@ -25,6 +25,47 @@
 
 struct hwindow;
 
+typedef enum {
+  EVENT_EMPTY,
+  EVENT_KEYBOARD,
+  EVENT_MOUSE,
+  EVENT_WINDOW
+} event_type;
+
+struct event_keyboard_data {
+  int code;
+  unsigned state;
+};
+
+struct event_mouse_data {
+  unsigned int x, y;
+  unsigned int dx, dy;
+  unsigned int released;
+  enum mouse_bouton {
+    BUTTON_NONE = 0,
+    BUTTON_RIGHT = 1,
+    BUTTON_LEFT = 2,
+    BUTTON_MIDDLE = 4
+  } button;
+};
+
+struct event_window_data {
+  unsigned quit;
+};
+
+union event_data {
+  struct event_keyboard_data key;
+  struct event_mouse_data mouse;
+  struct event_window_data window;
+};
+
+struct event {
+  event_type type;
+  union event_data data;
+};
+
+typedef void (*event_callback)(const struct event *data);
+
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -34,10 +75,20 @@ struct hwindow;
  ******************************************************************************/
 
 /*
- *  Lancement et Initialisation de la fenetre
+ *  Initialisation d'une fenetre
  */
-void HW_start(const char *name, unsigned int x, unsigned int y,
-              void (*userfunc)(struct hwindow *));
+struct hwindow *HW_Init(const char *name, unsigned int width,
+                        unsigned int height);
+
+/*
+ *  Fermeture d'une fenetre
+ */
+void HW_Close(struct hwindow *hw);
+
+/*
+ *  Lancement du loop evenements et affichage
+ */
+void HW_Loop(struct hwindow *hw, void (*userfunc)(struct hwindow *));
 
 /*
  *  Mise a jour d'un pixel dans le buffer
@@ -48,6 +99,12 @@ void HW_SetPx(struct hwindow *hw, unsigned int x, unsigned int y, color c);
  * Affichage des informations de debug
  */
 void HW_Print(struct hwindow *hw);
+
+/*
+ * Ajoute un callback pour un type specifique d'evenements
+ */
+void HW_SetCallback(struct hwindow *hw, event_type type,
+                    event_callback callback);
 
 /*
  *  get xmax
