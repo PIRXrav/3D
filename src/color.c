@@ -29,7 +29,7 @@ color CL_rgb(uint8_t r, uint8_t g, uint8_t b) {
 }
 
 color CL_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
-  return (color)(struct color_rgb){b, g, r, a};
+  return (color)(struct color_rgb){.b = b, .g = g, .r = r, .a = a};
 }
 
 color CL_Random() { return CL_rgb(rand(), rand(), rand()); }

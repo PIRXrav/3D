@@ -141,7 +141,7 @@ struct Mesh *MESH_InitTetrahedron(struct Vector *origin) {
   MESH_AddFace(p, &o, &x, &y, CL_rgb(0, 0, 255));
   MESH_AddFace(p, &o, &x, &z, CL_rgb(0, 255, 0));
   MESH_AddFace(p, &o, &y, &z, CL_rgb(255, 0, 0));
-  MESH_AddFace(p, &x, &y, &z, CL_Random());
+  MESH_AddFace(p, &x, &y, &z, CL_DEEPPINK);
 
   assert(MESH_GetNbFace(p) == 4);
   assert(MESH_GetNbVertice(p) == 4);

@@ -10,7 +10,7 @@
 ### Lumière, reflection et ombres
 
 # TODO
-- Couleurs CL. Bugs de cast.
+- ~~Couleurs CL. Bugs de cast.~~
 - ~~Vecteur norme au carre.~~
 - ~~Tableau de meshs.~~
 - Init loop Window
