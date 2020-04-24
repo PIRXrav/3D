@@ -41,12 +41,11 @@ struct Render *RD_Init(unsigned int xmax, unsigned int ymax) {
   ret->highlightedMesh = NULL;
   ret->highlightedFace = NULL;
 
-  VECT_Set(&ret->cam_pos, -5, -5, 0);
-  VECT_Set(&ret->cam_u, 1, 0, 0);
-  VECT_Set(&ret->cam_v, 0, 1, 0);
-  VECT_Set(&ret->cam_w, 0, 0, -1);
-  VECT_Set(&ret->cam_wp, -1, -1, -1);
   ret->fov_rad = 3;
+  struct Vector cam_pos = {-5, -5, 0};
+  struct Vector cam_forward = {-1, -1, 0};
+  struct Vector cam_up = {0, 0, 1};
+  RD_SetCam(ret, &cam_pos, &cam_forward, &cam_up);
 
   return ret;
 }
@@ -105,28 +104,9 @@ void RD_Print(struct Render *rd) {
  */
 void RD_CalcRayDir(struct Render *rd, unsigned int sx, unsigned int sy,
                    struct Vector *ray) {
-  /* Précalcul w' */
-  struct Vector un, vn, wn;
-  VECT_MultSca(&un, &rd->cam_u, -(double)rd->xmax / 2);
-  VECT_MultSca(&vn, &rd->cam_v, (double)rd->ymax / 2);
-  VECT_MultSca(&wn, &rd->cam_w,
-               ((double)rd->ymax / 2) / tan(rd->fov_rad * 0.5));
-  VECT_Add(&rd->cam_wp, &un, &vn);
-  VECT_Sub(&rd->cam_wp, &rd->cam_wp, &wn);
-
-  //
-  // printf("un vn wn :");
-  // VECT_Print(&un);
-  // VECT_Print(&vn);
-  // VECT_Print(&wn);
-  // printf("\n");
-  //
-  /* Calcul ray */
-  struct Vector ux, vy;
-  VECT_MultSca(&ux, &rd->cam_u, (double)sx);
-  VECT_MultSca(&vy, &rd->cam_v, -(double)sy);
-  VECT_Add(ray, &ux, &vy);
-  VECT_Add(ray, ray, &rd->cam_wp);
+  ray->x = rd->cam_u.x * (double)sx - rd->cam_v.x * (double)sy + rd->cam_wp.x;
+  ray->y = rd->cam_u.y * (double)sx - rd->cam_v.y * (double)sy + rd->cam_wp.y;
+  ray->z = rd->cam_u.z * (double)sx - rd->cam_v.z * (double)sy + rd->cam_wp.z;
   // VECT_Normalise(ray);
   // Vec3f ray_dir = normalize(x * u + y * (-v) + w_p);
 }
@@ -216,6 +196,15 @@ void RD_SetCam(struct Render *rd, const struct Vector *cam_pos,
   VECT_CrossProduct(&rd->cam_u, &cam_up_world_1, &cam_forward_1);
   // up
   VECT_CrossProduct(&rd->cam_v, &rd->cam_w, &rd->cam_u);
+
+  /* Précalcul w' */
+  struct Vector un, vn, wn;
+  VECT_MultSca(&un, &rd->cam_u, -(double)rd->xmax / 2);
+  VECT_MultSca(&vn, &rd->cam_v, (double)rd->ymax / 2);
+  VECT_MultSca(&wn, &rd->cam_w,
+               ((double)rd->ymax / 2) / tan(rd->fov_rad * 0.5));
+  VECT_Add(&rd->cam_wp, &un, &vn);
+  VECT_Sub(&rd->cam_wp, &rd->cam_wp, &wn);
 }
 
 /*******************************************************************************
