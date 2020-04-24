@@ -1,5 +1,6 @@
 #include "color.h"
 #include "geo.h"
+#include "parsers/parser.h"
 #include "render.h"
 #include "window.h"
 #include <math.h>
@@ -26,10 +27,6 @@ void user_loop(struct hwindow *hw) {
   static double angle = 0;
   static struct Vector barycentre = {.25, .25, .25};
 
-  rd->cam_pos.x = -1;
-  rd->cam_pos.y = -1;
-  rd->cam_pos.z = -.5;
-
   rd->fov_rad = 1.05;
   static struct Vector cam_vect = {-1, -1, -1};
   static struct Vector cam_up_world = {0, 0, 1};
@@ -37,9 +34,9 @@ void user_loop(struct hwindow *hw) {
   angle += 0.05;
 
   /* pos */
-  rd->cam_pos.x = cos(angle) * 10;     // + rd->mesh->vertices[0].x;
-  rd->cam_pos.y = sin(angle) * 10;     // + rd->mesh->vertices[0].y;
-  rd->cam_pos.z = sin(angle / 2) * 10; // + rd->mesh->vertices[0].y;
+  rd->cam_pos.x = cos(angle) * 5;     // + rd->mesh->vertices[0].x;
+  rd->cam_pos.y = sin(angle) * 5;     // + rd->mesh->vertices[0].y;
+  rd->cam_pos.z = sin(angle / 2) * 5; // + rd->mesh->vertices[0].y;
   // make
   VECT_Sub(&cam_vect, &rd->cam_pos, &barycentre);
   RD_SetCam(rd, &rd->cam_pos, &cam_vect, &cam_up_world);
@@ -57,8 +54,16 @@ void user_loop(struct hwindow *hw) {
 int main(void) {
   // HW_start("Test", 900, 600, user_loop);
   // VECT_test();
-  rd = RD_InitTetrahedrons(X, Y);
+  rd = RD_Init(X, Y);
   RD_Print(rd);
+
+  unsigned nbMeshes;
+  struct Mesh **meshes = PARSER_Load("data/fox.obj", &nbMeshes);
+  printf("Loaded mesh !\n");
+  for (unsigned i = 0; i < nbMeshes; i++)
+    RD_AddMesh(rd, meshes[i]);
+
+  // RD_Print(rd);
 
   HW_start("Test", X, Y, user_loop);
 

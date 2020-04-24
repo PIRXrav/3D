@@ -54,6 +54,9 @@ struct Render {
 struct Render *RD_Init(unsigned int xmax, unsigned int ymax);
 struct Render *RD_InitTetrahedrons(unsigned int xmax, unsigned int ymax);
 
+/* Ajoute une mesh au render, aucune copie n'est faite */
+void RD_AddMesh(struct Render *rd, struct Mesh *m);
+
 /*
  * Calcule d'une raie
  */

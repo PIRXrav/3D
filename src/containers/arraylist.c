@@ -14,7 +14,7 @@
  ******************************************************************************/
 struct ArrayList {
   void *data;
-  unsigned int capacity, number;
+  size_t capacity, number;
   size_t elementSize;
 };
 

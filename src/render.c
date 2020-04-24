@@ -42,6 +42,7 @@ struct Render *RD_Init(unsigned int xmax, unsigned int ymax) {
   VECT_Set(&ret->cam_u, 1, 0, 0);
   VECT_Set(&ret->cam_v, 0, 1, 0);
   VECT_Set(&ret->cam_w, 0, 0, -1);
+  VECT_Set(&ret->cam_wp, -1, -1, -1);
   ret->fov_rad = 3;
 
   return ret;
@@ -72,9 +73,17 @@ struct Render *RD_InitTetrahedrons(unsigned int xmax, unsigned int ymax) {
   VECT_Set(&ret->cam_u, 1, 0, 0);
   VECT_Set(&ret->cam_v, 0, 1, 0);
   VECT_Set(&ret->cam_w, 0, 0, -1);
+  VECT_Set(&ret->cam_wp, -1, -1, -1);
   ret->fov_rad = 3;
 
   return ret;
+}
+
+/* Ajoute une mesh au render, aucune copie n'est faite */
+void RD_AddMesh(struct Render *rd, struct Mesh *m) {
+  rd->nb_meshs++;
+  rd->meshs = realloc(rd->meshs, sizeof(struct mesh *) * rd->nb_meshs);
+  rd->meshs[rd->nb_meshs - 1] = m;
 }
 
 void RD_Print(struct Render *rd) {
