@@ -30,11 +30,9 @@ struct MeshEdges {
 };
 
 struct Mesh {
-
-  // unsigned int nb_vertices;
+  const char *name;    // Le nom du mesh
   ArrayList *vertices; // Vector
-  // unsigned int nb_faces;
-  ArrayList *faces; // MeshFace
+  ArrayList *faces;    // MeshFace
 
   struct Vector origin;
 };
@@ -80,8 +78,9 @@ struct Vector *MESH_GetVertice(const struct Mesh *mesh, size_t index);
 /*
  *  Ajoute une face au mesh
  */
-struct MeshFace *MESH_AddFace(struct Mesh *mesh, const struct Vector *vertices,
-                              size_t nb_vertices, color c);
+struct MeshFace *MESH_AddFace(struct Mesh *mesh, const struct Vector *vertex0,
+                              const struct Vector *vertex1,
+                              const struct Vector *vertex2, color c);
 
 struct Triangle *MESH_FACE_ToTriangleStatique(struct MeshFace *mf);
 

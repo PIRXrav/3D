@@ -83,7 +83,6 @@ void RD_Print(struct Render *rd) {
   VECT_Print(&rd->cam_wp);
   printf("\n");
   for (unsigned int i_mesh = 0; i_mesh < rd->nb_meshs; i_mesh++) {
-    printf("\tMESH: \n");
     MESH_Print(rd->meshs[i_mesh]);
     printf("\n");
   }
