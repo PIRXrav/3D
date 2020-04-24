@@ -2,7 +2,7 @@
 #include <assert.h>
 
 typedef struct Data {
-  int x, y;
+  unsigned x, y;
 } Data;
 
 int main() {
@@ -15,10 +15,20 @@ int main() {
   ARRLIST_SetCapacity(list, 100);
   ARRLIST_Fit(list);
 
-  for (int i = 0; i < ARRLIST_GetSize(list); i++) {
+  for (unsigned i = 0; i < ARRLIST_GetSize(list); i++) {
     Data *x = ARRLIST_Get(list, i);
     assert(x->x == i && x->y == i);
   }
+
+  Data s = {10, 10};
+
+  assert(ARRLIST_Search(list, &s) == 10);
+  s.x = s.y = 14;
+  assert(ARRLIST_Search(list, &s) == 14);
+  s.x = 15;
+  assert(ARRLIST_Search(list, &s) == -1);
+  s.x = s.y = ARRLIST_GetSize(list);
+  assert(ARRLIST_Search(list, &s) == -1);
 
   ARRLIST_Clear(list);
   assert(!ARRLIST_GetSize(list));
