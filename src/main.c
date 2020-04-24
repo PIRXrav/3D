@@ -58,7 +58,7 @@ int main(void) {
   RD_Print(rd);
 
   unsigned nbMeshes;
-  struct Mesh **meshes = PARSER_Load("data/fox.obj", &nbMeshes);
+  struct Mesh **meshes = PARSER_Load("data/icosphere-20.obj", &nbMeshes);
   printf("Loaded mesh !\n");
   for (unsigned i = 0; i < nbMeshes; i++)
     RD_AddMesh(rd, meshes[i]);

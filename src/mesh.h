@@ -20,21 +20,25 @@
  * Types
  ******************************************************************************/
 
+typedef struct Vector MeshVertex;
+
+typedef struct MeshFace MeshFace;
 struct MeshFace {
-  struct Vector *p0, *p1, *p2; // Uniquement des triangles
+  MeshVertex *p0, *p1, *p2; // Uniquement des triangles
   color color;
 };
 
-struct MeshEdges {
-  struct Vector *p0, *p1;
+typedef struct MeshEdge MeshEdge;
+struct MeshEdge {
+  MeshVertex *p0, *p1;
 };
 
+typedef struct Mesh Mesh;
 struct Mesh {
-  char *name;          // Le nom du mesh
+  const char *name;    // Le nom du mesh
   ArrayList *vertices; // Vector
   ArrayList *faces;    // MeshFace
-
-  struct Vector origin;
+  MeshVertex origin;
 };
 
 /*******************************************************************************
@@ -44,49 +48,32 @@ struct Mesh {
 /*******************************************************************************
  * Prototypes
  ******************************************************************************/
-/*
- * Initialise une mesh vide
- */
-struct Mesh *MESH_Init();
 
-/*
- * Initialise un tetrahedre
- * https://en.wikipedia.org/wiki/Tetrahedron
- */
-struct Mesh *MESH_InitTetrahedron(struct Vector *origin);
+// Initialisation VERTEX
+extern MeshVertex *MESH_VERT_Set(MeshVertex *v, double x, double y, double z);
+extern MeshVertex *MESH_VERT_Init(double x, double y, double z);
+extern void MESH_VERT_Print(MeshVertex *v);
 
-/*
- * Retourne le nombre de faces du mesh
- */
-size_t MESH_GetNbFace(const struct Mesh *mesh);
+// Initialisation face
+extern MeshFace *MESH_FACE_Set(MeshFace *mf, MeshVertex *p0, MeshVertex *p1,
+                               MeshVertex *p2, color c);
+extern MeshFace *MESH_FACE_Init(MeshVertex *p1, MeshVertex *p2, MeshVertex *p3,
+                                color c);
+extern void MESH_FACE_Print(struct MeshFace *face);
 
-/* Definit le nom de la mesh */
-void MESH_SetName(struct Mesh *mesh, const char *name);
+// Mesh
+extern Mesh *MESH_Init(void);
+extern size_t MESH_GetNbFace(const Mesh *mesh);
+extern size_t MESH_GetNbVertice(const Mesh *mesh);
+extern MeshFace *MESH_GetFace(const Mesh *mesh, size_t index);
+extern MeshVertex *MESH_GetVertex(const Mesh *mesh, size_t index);
+extern MeshVertex *MESH_AddVertex(Mesh *mesh, const MeshVertex *vertex);
+extern MeshFace *MESH_AddFace(Mesh *mesh, const MeshFace *face);
+extern void MESH_SetName(Mesh *mesh, const char *name);
+extern Mesh *MESH_InitTetrahedron(MeshVertex *origin);
+extern void MESH_Print(const Mesh *mesh);
 
-/*
- * Retourne le nombre de sommets du mesh
- */
-size_t MESH_GetNbVertice(const struct Mesh *mesh);
-
-/*
- * Retourne le vecteur de face
- */
-struct MeshFace *MESH_GetFace(const struct Mesh *mesh, size_t index);
-
-/*
- * Retourne le vecteur de sommets
- */
-struct Vector *MESH_GetVertice(const struct Mesh *mesh, size_t index);
-
-/*
- *  Ajoute une face au mesh
- */
-struct MeshFace *MESH_AddFace(struct Mesh *mesh, const struct Vector *vertex0,
-                              const struct Vector *vertex1,
-                              const struct Vector *vertex2, color c);
-
-struct Triangle *MESH_FACE_ToTriangleStatique(struct MeshFace *mf);
-
-void MESH_Print(struct Mesh *mesh);
+// extra
+extern struct Triangle *MESH_FACE_ToTriangleStatique(MeshFace *mf);
 
 #endif /* _GEO_H_ */

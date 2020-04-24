@@ -4,7 +4,7 @@
 
 #include "parser_obj.h"
 #include "color.h"
-#include "containers/arraylist.h"
+#include "containers/arraylistp.h"
 #include "geo.h"
 #include <assert.h>
 #include <ctype.h>
@@ -54,9 +54,9 @@ struct Mesh **OBJ_Parse(FILE *file, unsigned *nbMeshes) {
   char buffer[256];
 
   entity_type entity;
-  ArrayList *vertices = ARRLIST_Create(sizeof(struct Vector));
+  ArrayList *vertices = ARRLISTP_Create();
   struct Mesh *currentMesh = NULL;
-  ArrayList *meshes = ARRLIST_Create(sizeof(struct Mesh *));
+  ArrayList *meshes = ARRLISTP_Create();
 
   *nbMeshes = 0;
   int faceIndex = 0;
@@ -67,7 +67,7 @@ struct Mesh **OBJ_Parse(FILE *file, unsigned *nbMeshes) {
     case VERTEX: {
       struct Vector v;
       sscanf(buffer, "v %lf %lf %lf", &v.x, &v.y, &v.z);
-      ARRLIST_Add(vertices, &v);
+      ARRLISTP_Add(vertices, MESH_VERT_Init(v.x, v.y, v.z));
     } break;
     case FACE:
       if (!currentMesh) {
@@ -80,17 +80,19 @@ struct Mesh **OBJ_Parse(FILE *file, unsigned *nbMeshes) {
       unsigned nbVertices = MAX_VERTICES_PER_FACE;
       parseFace(buffer, verticesIndex, &nbVertices);
 
-      MESH_AddFace(currentMesh, ARRLIST_Get(vertices, verticesIndex[0]),
-                   ARRLIST_Get(vertices, verticesIndex[1]),
-                   ARRLIST_Get(vertices, verticesIndex[2]),
-                   CL_rgb(50 + faceIndex * 2, faceIndex * 2, 50 + faceIndex));
+      MESH_AddFace(currentMesh,
+                   MESH_FACE_Init(ARRLISTP_Get(vertices, verticesIndex[0]),
+                                  ARRLISTP_Get(vertices, verticesIndex[1]),
+                                  ARRLISTP_Get(vertices, verticesIndex[2]),
+                                  CL_rgb(50 + faceIndex * 2, faceIndex * 2,
+                                         50 + faceIndex)));
       faceIndex++;
       break;
     case OBJECT:
       // Nouvelle mesh : on ajoute la precedente a la liste et on travaille sur
       // une nouvelle
       if (currentMesh) {
-        ARRLIST_Add(meshes, &currentMesh);
+        ARRLISTP_Add(meshes, currentMesh);
       }
       currentMesh = MESH_Init();
       strtok(buffer, " ");
@@ -105,11 +107,11 @@ struct Mesh **OBJ_Parse(FILE *file, unsigned *nbMeshes) {
   }
 
   // On ajoute la derniere mesh
-  ARRLIST_Add(meshes, &currentMesh);
+  ARRLISTP_Add(meshes, currentMesh);
 
-  *nbMeshes = ARRLIST_GetSize(meshes);
+  *nbMeshes = ARRLISTP_GetSize(meshes);
 
-  return ARRLIST_ToArray(meshes);
+  return ARRLISTP_ToArray(meshes);
 }
 
 /*******************************************************************************
