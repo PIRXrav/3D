@@ -93,6 +93,7 @@ size_t ARRLIST_GetSize(const ArrayList *list) { return list->number; }
 void *ARRLIST_GetData(ArrayList *list) { return list->data; }
 
 void *ARRLIST_ToArray(ArrayList *list) {
+  ARRLIST_Fit(list);
   void *data = list->data;
   free(list);
   return data;

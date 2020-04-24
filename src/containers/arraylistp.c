@@ -46,7 +46,7 @@ extern void ARRLISTP_Free(ArrayList *list) {
   free(list);
 }
 
-extern void *ARRLISTP_Add(ArrayList *list, const void *element) {
+extern void *ARRLISTP_Add(ArrayList *list, void *element) {
   if (list->number == list->capacity)
     ARRLISTP_SetCapacity(list, list->capacity * 2);
   // memcpy(list->data[list->number], element, ) list->data[list->number] =
@@ -63,7 +63,7 @@ extern void *ARRLISTP_Get(const ArrayList *list, size_t index) {
 extern void ARRLISTP_Clear(ArrayList *list) { list->number = 0; }
 
 extern int ARRLISTP_Search(const ArrayList *list, const void *element,
-                           int (*eq)(void *, void *)) {
+                           int (*eq)(const void *, const void *)) {
   for (size_t i = 0; i < list->number; i++) {
     if (eq(element, list->data[i]))
       return i;
@@ -75,7 +75,7 @@ extern size_t ARRLISTP_GetSize(const ArrayList *list) { return list->number; }
 // void *ARRLISTP_GetData(ArrayList *list) { return list->data; }
 
 extern void *ARRLISTP_ToArray(ArrayList *list) {
-  // ARRLISTP_Fit(list);
+  ARRLISTP_Fit(list);
   void *data = list->data;
   free(list);
   return data;

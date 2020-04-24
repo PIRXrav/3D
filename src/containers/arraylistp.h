@@ -27,11 +27,11 @@ typedef struct ArrayList ArrayList;
 
 extern ArrayList *ARRLISTP_Create(void);
 extern void ARRLISTP_Free(ArrayList *list);
-extern void *ARRLISTP_Add(ArrayList *list, const void *element);
+extern void *ARRLISTP_Add(ArrayList *list, void *element);
 extern void *ARRLISTP_Get(const ArrayList *list, size_t index);
 extern void ARRLISTP_Clear(ArrayList *list);
 extern int ARRLISTP_Search(const ArrayList *list, const void *element,
-                           int (*eq)(void *, void *));
+                           int (*eq)(const void *, const void *));
 extern size_t ARRLISTP_GetSize(const ArrayList *list);
 extern void *ARRLISTP_ToArray(ArrayList *list);
 

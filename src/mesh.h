@@ -35,7 +35,7 @@ struct MeshEdge {
 
 typedef struct Mesh Mesh;
 struct Mesh {
-  const char *name;    // Le nom du mesh
+  char *name;          // Le nom du mesh
   ArrayList *vertices; // Vector
   ArrayList *faces;    // MeshFace
   MeshVertex origin;
@@ -67,8 +67,8 @@ extern size_t MESH_GetNbFace(const Mesh *mesh);
 extern size_t MESH_GetNbVertice(const Mesh *mesh);
 extern MeshFace *MESH_GetFace(const Mesh *mesh, size_t index);
 extern MeshVertex *MESH_GetVertex(const Mesh *mesh, size_t index);
-extern MeshVertex *MESH_AddVertex(Mesh *mesh, const MeshVertex *vertex);
-extern MeshFace *MESH_AddFace(Mesh *mesh, const MeshFace *face);
+extern MeshVertex *MESH_AddVertex(Mesh *mesh, MeshVertex *vertex);
+extern MeshFace *MESH_AddFace(Mesh *mesh, MeshFace *face);
 extern void MESH_SetName(Mesh *mesh, const char *name);
 extern Mesh *MESH_InitTetrahedron(MeshVertex *origin);
 extern void MESH_Print(const Mesh *mesh);

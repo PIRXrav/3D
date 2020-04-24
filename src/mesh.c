@@ -133,14 +133,14 @@ extern MeshVertex *MESH_GetVertex(const Mesh *mesh, size_t index) {
 /*
  * Ajoute un sommet au mesh si il n'existe pas. On le retourne.
  */
-extern MeshVertex *MESH_AddVertex(Mesh *mesh, const MeshVertex *vertex) {
+extern MeshVertex *MESH_AddVertex(Mesh *mesh, MeshVertex *vertex) {
   return ARRLISTP_Add(mesh->vertices, vertex);
 }
 
 /*
  *  Ajoute une face au mesh
  */
-extern MeshFace *MESH_AddFace(Mesh *mesh, const MeshFace *face) {
+extern MeshFace *MESH_AddFace(Mesh *mesh, MeshFace *face) {
   return ARRLISTP_Add(mesh->faces, face);
 }
 

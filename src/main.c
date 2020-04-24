@@ -82,7 +82,7 @@ int main(void) {
 
   struct hwindow *fenetre = HW_Init("Rendu 3D", X, Y);
 
-  HW_SetCallback(fenetre, EVENT_KEYBOARD, key_event);
+  HW_SetCallback(fenetre, EVENT_MOUSE, mouse_event);
 
   HW_Loop(fenetre, user_loop);
 
