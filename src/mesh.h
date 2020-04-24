@@ -6,6 +6,7 @@
  ******************************************************************************/
 
 #include "color.h"
+#include "containers/arraylist.h"
 #include "geo.h"
 
 #include <stdbool.h>
@@ -30,10 +31,10 @@ struct MeshEdges {
 
 struct Mesh {
 
-  unsigned int nb_vertices;
-  struct Vector *vertices;
-  unsigned int nb_faces;
-  struct MeshFace *faces;
+  // unsigned int nb_vertices;
+  ArrayList *vertices; // Vector
+  // unsigned int nb_faces;
+  ArrayList *faces; // MeshFace
 
   struct Vector origin;
 };
@@ -55,6 +56,28 @@ struct Mesh *MESH_Init();
  * https://en.wikipedia.org/wiki/Tetrahedron
  */
 struct Mesh *MESH_InitTetrahedron(struct Vector *origin);
+
+/*
+ * Retourne le nombre de faces du mesh
+ */
+size_t MESH_GetNbFace(const struct Mesh *mesh);
+
+/*
+ * Retourne le nombre de sommets du mesh
+ */
+size_t MESH_GetNbVertice(const struct Mesh *mesh);
+
+/*
+ * Retourne le vecteur de face
+ */
+struct MeshFace *MESH_GetFace(const struct Mesh *mesh, size_t index);
+
+/*
+ * Retourne le vecteur de sommets
+ */
+struct Vector *MESH_GetVertice(const struct Mesh *mesh, size_t index);
+
+struct Triangle *MESH_FACE_ToTriangleStatique(struct MeshFace *mf);
 
 void MESH_Print(struct Mesh *mesh);
 

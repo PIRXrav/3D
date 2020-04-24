@@ -52,6 +52,7 @@ struct Render {
  * Initialisation
  */
 struct Render *RD_Init(unsigned int xmax, unsigned int ymax);
+struct Render *RD_InitTetrahedrons(unsigned int xmax, unsigned int ymax);
 
 /*
  * Calcule d'une raie

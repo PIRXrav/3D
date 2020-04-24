@@ -42,6 +42,17 @@ const struct Vector VECT_Z = {0, 0, 1};
  ******************************************************************************/
 
 /*
+ * Initialisation d'un vecteur statique
+ */
+struct Vector *VECT_SetStatic(double x, double y, double z) {
+  static struct Vector v;
+  v.x = x;
+  v.y = y;
+  v.z = z;
+  return &v;
+}
+
+/*
  * Initialisation de vecteur
  */
 struct Vector *VECT_Set(struct Vector *v, double x, double y, double z) {

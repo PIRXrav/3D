@@ -32,7 +32,28 @@
 struct Render *RD_Init(unsigned int xmax, unsigned int ymax) {
   struct Render *ret = malloc(sizeof(struct Render));
 
-  int cote = 2;
+  ret->nb_meshs = 0;
+  ret->meshs = malloc(sizeof(struct mesh *) * ret->nb_meshs);
+
+  ret->xmax = xmax;
+  ret->ymax = ymax;
+
+  VECT_Set(&ret->cam_pos, -5, -5, 0);
+  VECT_Set(&ret->cam_u, 1, 0, 0);
+  VECT_Set(&ret->cam_v, 0, 1, 0);
+  VECT_Set(&ret->cam_w, 0, 0, -1);
+  ret->fov_rad = 3;
+
+  return ret;
+}
+
+/*
+ * Initialisation
+ */
+struct Render *RD_InitTetrahedrons(unsigned int xmax, unsigned int ymax) {
+  struct Render *ret = malloc(sizeof(struct Render));
+
+  unsigned int cote = 2;
   ret->nb_meshs = cote * cote;
   ret->meshs = malloc(sizeof(struct mesh *) * ret->nb_meshs);
   for (unsigned int i = 0; i < cote; i++) {
@@ -113,15 +134,13 @@ static bool RD_RayTraceOnMesh(const struct Mesh *mesh,
                               const struct Vector *cam_ray, struct Vector *x,
                               double *distance, color *color) {
   bool hit = false;
-  for (unsigned int i_face = 0; i_face < mesh->nb_faces; i_face++) {
-    static struct Triangle tr;
-    VECT_Cpy(&tr.a, mesh->faces[i_face].p0);
-    VECT_Cpy(&tr.b, mesh->faces[i_face].p1);
-    VECT_Cpy(&tr.c, mesh->faces[i_face].p2);
-    if (RayIntersectsTriangle(cam_pos, cam_ray, &tr, x)) {
+  for (unsigned int i_face = 0; i_face < MESH_GetNbFace(mesh); i_face++) {
+    struct Triangle *tr =
+        MESH_FACE_ToTriangleStatique(MESH_GetFace(mesh, i_face));
+    if (RayIntersectsTriangle(cam_pos, cam_ray, tr, x)) {
       double d = VECT_DistanceSquare(cam_pos, x);
       if (d < *distance) {
-        *color = mesh->faces[i_face].color;
+        *color = MESH_GetFace(mesh, i_face)->color;
         *distance = d;
         hit = true;
       }

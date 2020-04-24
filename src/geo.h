@@ -42,6 +42,10 @@ struct Triangle {
 /*******************************************************************************
  * Prototypes
  ******************************************************************************/
+/*
+ * Initialisation d'un vecteur statique
+ */
+struct Vector *VECT_SetStatic(double x, double y, double z);
 
 /*
  * Initialisation de vecteur
