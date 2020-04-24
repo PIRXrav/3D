@@ -167,9 +167,11 @@ struct Vector *VECT_Normalise(struct Vector *v) {
 /*
  * Angle entre deux vecteurs
  */
+/*
 double VECT_Angle(const struct Vector *a, const struct Vector *b) {
   return 0.f;
 }
+*/
 
 /*
  * RayIntersectsTriangle

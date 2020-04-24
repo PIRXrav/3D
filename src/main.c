@@ -54,7 +54,7 @@ void user_loop(struct hwindow *hw) {
   // RD_Print(rd);
 }
 
-int main(int argc, char **argv) {
+int main(void) {
   // HW_start("Test", 900, 600, user_loop);
   // VECT_test();
   rd = RD_InitTetrahedrons(X, Y);

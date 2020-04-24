@@ -168,9 +168,11 @@ void MESH_Print(struct Mesh *mesh) {
 /*
  * Translate le mesh suivant le vecteur depl
  */
+/*
 void MESH_Translate(struct Mesh *mesh, struct Vector *depl) {
   ; // TODO
 }
+*/
 /*******************************************************************************
  * Variables
  ******************************************************************************/
