@@ -40,6 +40,9 @@ struct Render {
   struct Vector cam_v;
   struct Vector cam_w;  // cam dir
   struct Vector cam_wp; // précalcul unique
+
+  /* plan de la camera */
+  color *plan_projection;
 };
 
 /*******************************************************************************
@@ -88,5 +91,8 @@ void RD_Print(struct Render *rd);
 void RD_SetCam(struct Render *rd, const struct Vector *cam_pos,
                const struct Vector *cam_forward,
                const struct Vector *cam_up_world);
+
+//
+void calc_projection(struct Render *rd);
 
 #endif /* _RENDER_H_ */

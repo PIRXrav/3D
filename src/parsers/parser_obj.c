@@ -54,7 +54,6 @@ struct Mesh **OBJ_Parse(FILE *file, unsigned *nbMeshes) {
   char buffer[256];
 
   entity_type entity;
-  ArrayList *vertices = ARRLISTP_Create();
   struct Mesh *currentMesh = NULL;
   ArrayList *meshes = ARRLISTP_Create();
 
@@ -67,7 +66,7 @@ struct Mesh **OBJ_Parse(FILE *file, unsigned *nbMeshes) {
     case VERTEX: {
       struct Vector v;
       sscanf(buffer, "v %lf %lf %lf", &v.x, &v.y, &v.z);
-      ARRLISTP_Add(vertices, MESH_VERT_Init(v.x, v.y, v.z));
+      MESH_AddVertex(currentMesh, MESH_VERT_Init(v.x, v.y, v.z));
     } break;
     case FACE:
       if (!currentMesh) {
@@ -81,9 +80,9 @@ struct Mesh **OBJ_Parse(FILE *file, unsigned *nbMeshes) {
       parseFace(buffer, verticesIndex, &nbVertices);
 
       MESH_AddFace(currentMesh,
-                   MESH_FACE_Init(ARRLISTP_Get(vertices, verticesIndex[0]),
-                                  ARRLISTP_Get(vertices, verticesIndex[1]),
-                                  ARRLISTP_Get(vertices, verticesIndex[2]),
+                   MESH_FACE_Init(MESH_GetVertex(currentMesh, verticesIndex[0]),
+                                  MESH_GetVertex(currentMesh, verticesIndex[1]),
+                                  MESH_GetVertex(currentMesh, verticesIndex[2]),
                                   CL_rgb(50 + faceIndex * 2, faceIndex * 2,
                                          50 + faceIndex)));
       faceIndex++;

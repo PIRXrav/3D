@@ -47,6 +47,8 @@ struct Render *RD_Init(unsigned int xmax, unsigned int ymax) {
   struct Vector cam_up = {0, 0, 1};
   RD_SetCam(ret, &cam_pos, &cam_forward, &cam_up);
 
+  ret->plan_projection = malloc(sizeof(color) * xmax * ymax);
+
   return ret;
 }
 
@@ -208,6 +210,71 @@ void RD_SetCam(struct Render *rd, const struct Vector *cam_pos,
                ((double)rd->ymax / 2) / tan(rd->fov_rad * 0.5));
   VECT_Add(&rd->cam_wp, &un, &vn);
   VECT_Sub(&rd->cam_wp, &rd->cam_wp, &wn);
+}
+
+/*
+ * 3D projection
+ * http://www.cse.psu.edu/~rtc12/CSE486/lecture12.pdf
+ */
+void calc_projection(struct Render *rd) {
+  // set 0:
+  for (unsigned int x = 0; x < rd->xmax; x++) {
+    for (unsigned int y = 0; y < rd->ymax; y++) {
+      rd->plan_projection[y * rd->xmax + x] = CL_BLACK;
+    }
+  }
+
+  // Matrice world to camera
+  double tx = -VECT_DotProduct(&rd->cam_u, &rd->cam_pos);
+  double ty = -VECT_DotProduct(&rd->cam_v, &rd->cam_pos);
+  double tz = -VECT_DotProduct(&rd->cam_w, &rd->cam_pos);
+
+  // Matrice de projection
+  double S = 1 / (tan(rd->fov_rad / 2));
+  double f = 1;
+  double n = 0.01;
+  double b = -f / (f - n);
+  double bn = b * n;
+
+  double scalex = (double)rd->ymax / (double)rd->xmax, scaley = 1;
+
+  for (unsigned int i_mesh = 0; i_mesh < rd->nb_meshs; i_mesh++) {
+    printf("XXXX");
+    Mesh *mesh = rd->meshs[i_mesh];
+    printf("%d\n", MESH_GetNbVertice(mesh));
+    for (unsigned int i_v = 0; i_v < MESH_GetNbVertice(mesh); i_v++) {
+
+      MeshVertex *p = MESH_GetVertex(mesh, i_v);
+      double pw = 1;
+
+      // World to camera
+      double camx = VECT_DotProduct(&rd->cam_u, p) + tx;
+      double camy = VECT_DotProduct(&rd->cam_v, p) + ty;
+      double camz = VECT_DotProduct(&rd->cam_w, p) + tz;
+      double camw = 1;
+
+      // Projection
+      double npx = (S * camx);
+      double npy = (S * camy);
+      double npz = (b * camz + bn * camw);
+      double npw = -camz;
+
+      // Normalisation homogene => cartesienne
+      double nnpx = npx / npw;
+      double nnpy = npy / npw;
+      double nnpz = npz / npw;
+
+      nnpx /= nnpz;
+      nnpy /= nnpz;
+
+      // Rendu
+      uint32_t x = (uint32_t)((nnpx * scalex + 1) * 0.5 * rd->xmax);
+      uint32_t y = (uint32_t)((1 - (nnpy * scaley + 1) * 0.5) * rd->ymax);
+      printf("x = %u y = %u\n", x, y);
+      if (x < rd->xmax && x >= 0 && y < rd->ymax && y >= 0)
+        rd->plan_projection[y * rd->xmax + x] = CL_DEEPPINK;
+    }
+  }
 }
 
 /*******************************************************************************

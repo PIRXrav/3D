@@ -7,7 +7,7 @@
 #include <stdio.h>
 
 const unsigned int X = 400;
-const unsigned int Y = 300;
+const unsigned int Y = 400;
 struct Render *rd;
 
 void mouse_event(const struct event *event) {
@@ -62,6 +62,14 @@ void user_loop(struct hwindow *hw) {
     }
     // printf("\n");
   }
+
+  calc_projection(rd);
+  for (unsigned int y = 0; y < HW_GetY(hw); y++) {
+    for (unsigned int x = 0; x < HW_GetX(hw); x++) {
+      if (rd->plan_projection[y * rd->xmax + x].raw != CL_BLACK.raw)
+        HW_SetPx(hw, x, y, rd->plan_projection[y * rd->xmax + x]);
+    }
+  }
   // RD_Print(rd);
 }
 
@@ -73,7 +81,7 @@ int main(void) {
   RD_Print(rd);
 
   unsigned nbMeshes;
-  struct Mesh **meshes = PARSER_Load("data/icosphere-20.obj", &nbMeshes);
+  struct Mesh **meshes = PARSER_Load("data/cube.obj", &nbMeshes);
   printf("Loaded mesh !\n");
   for (unsigned i = 0; i < nbMeshes; i++)
     RD_AddMesh(rd, meshes[i]);
