@@ -41,8 +41,11 @@ struct Render {
   struct Vector cam_w;  // cam dir
   struct Vector cam_wp; // précalcul unique
 
-  /* plan de la camera */
+  /* Projection */
   color *plan_projection;
+  double tx, ty, tz;     // changement de plan de la camera
+  double s;              // Fc du fov
+  double scalex, scaley; // relations à la taille de l'écran
 };
 
 /*******************************************************************************

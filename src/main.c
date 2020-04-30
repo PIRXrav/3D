@@ -41,28 +41,28 @@ void user_loop(struct hwindow *hw) {
   static double angle = 0;
   static struct Vector barycentre = {.25, .25, .25};
 
-  rd->fov_rad = 1.05;
-  static struct Vector cam_vect = {-1, -1, -1};
-  static struct Vector cam_up_world = {0, 0, 1};
+  static struct Vector cam_vect = {0, 0, -1};
+  static struct Vector cam_up_world = {0, 0, -1};
 
   angle += 0.05;
 
   /* pos */
   rd->cam_pos.x = cos(angle) * 5;     // + rd->mesh->vertices[0].x;
   rd->cam_pos.y = sin(angle) * 5;     // + rd->mesh->vertices[0].y;
-  rd->cam_pos.z = sin(angle / 2) * 5; // + rd->mesh->vertices[0].y;
-  // make
+  rd->cam_pos.z = sin(angle * 2) * 5; // + rd->mesh->vertices[0].y;
+                                      // make
   VECT_Sub(&cam_vect, &rd->cam_pos, &barycentre);
   RD_SetCam(rd, &rd->cam_pos, &cam_vect, &cam_up_world);
 
+  // Raytracing
   for (unsigned int y = 0; y < HW_GetY(hw); y++) {
     for (unsigned int x = 0; x < HW_GetX(hw); x++) {
       RD_CalcRayDir(rd, x, y, &ray);
       HW_SetPx(hw, x, y, RD_RayTraceOnRD(rd, &ray, &hit));
     }
-    // printf("\n");
   }
 
+  // Projection
   calc_projection(rd);
   for (unsigned int y = 0; y < HW_GetY(hw); y++) {
     for (unsigned int x = 0; x < HW_GetX(hw); x++) {

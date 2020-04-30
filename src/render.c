@@ -41,14 +41,17 @@ struct Render *RD_Init(unsigned int xmax, unsigned int ymax) {
   ret->highlightedMesh = NULL;
   ret->highlightedFace = NULL;
 
-  ret->fov_rad = 3;
-  struct Vector cam_pos = {-5, -5, 0};
+  ret->fov_rad = 1;
+  struct Vector cam_pos = {0, 0, 0};
   struct Vector cam_forward = {-1, -1, 0};
   struct Vector cam_up = {0, 0, 1};
   RD_SetCam(ret, &cam_pos, &cam_forward, &cam_up);
 
+  // Projection values
   ret->plan_projection = malloc(sizeof(color) * xmax * ymax);
-
+  ret->s = 1 / (tan(ret->fov_rad / 2));
+  ret->scalex = (double)ret->ymax / (double)ret->xmax;
+  ret->scaley = 1;
   return ret;
 }
 
@@ -190,8 +193,8 @@ void RD_SetCam(struct Render *rd, const struct Vector *cam_pos,
   static struct Vector cam_forward_1, cam_up_world_1;
   VECT_Cpy(&cam_forward_1, cam_forward);
   VECT_Cpy(&cam_up_world_1, cam_up_world);
-  VECT_Normalise(&cam_forward_1);
-  VECT_Normalise(&cam_up_world_1);
+  // VECT_Normalise(&cam_forward_1);
+  // VECT_Normalise(&cam_up_world_1);
 
   // Cam pos
   VECT_Cpy(&rd->cam_pos, cam_pos);
@@ -202,6 +205,11 @@ void RD_SetCam(struct Render *rd, const struct Vector *cam_pos,
   // up
   VECT_CrossProduct(&rd->cam_v, &rd->cam_w, &rd->cam_u);
 
+  // JAJA la normalisation
+  VECT_Normalise(&rd->cam_u);
+  VECT_Normalise(&rd->cam_v);
+  VECT_Normalise(&rd->cam_w);
+
   /* Précalcul w' */
   struct Vector un, vn, wn;
   VECT_MultSca(&un, &rd->cam_u, -(double)rd->xmax / 2);
@@ -210,6 +218,12 @@ void RD_SetCam(struct Render *rd, const struct Vector *cam_pos,
                ((double)rd->ymax / 2) / tan(rd->fov_rad * 0.5));
   VECT_Add(&rd->cam_wp, &un, &vn);
   VECT_Sub(&rd->cam_wp, &rd->cam_wp, &wn);
+
+  /* Précalcul projection */
+  // Matrice world to camera
+  rd->tx = -VECT_DotProduct(&rd->cam_u, &rd->cam_pos);
+  rd->ty = -VECT_DotProduct(&rd->cam_v, &rd->cam_pos);
+  rd->tz = +VECT_DotProduct(&rd->cam_w, &rd->cam_pos);
 }
 
 /*
@@ -224,53 +238,31 @@ void calc_projection(struct Render *rd) {
     }
   }
 
-  // Matrice world to camera
-  double tx = -VECT_DotProduct(&rd->cam_u, &rd->cam_pos);
-  double ty = -VECT_DotProduct(&rd->cam_v, &rd->cam_pos);
-  double tz = -VECT_DotProduct(&rd->cam_w, &rd->cam_pos);
-
-  // Matrice de projection
-  double S = 1 / (tan(rd->fov_rad / 2));
-  double f = 1;
-  double n = 0.01;
-  double b = -f / (f - n);
-  double bn = b * n;
-
-  double scalex = (double)rd->ymax / (double)rd->xmax, scaley = 1;
+  Mesh *mesh;
+  MeshVertex *p;
+  double camx, camy, camz, nnpx, nnpy;
+  uint32_t x, y;
 
   for (unsigned int i_mesh = 0; i_mesh < rd->nb_meshs; i_mesh++) {
-    printf("XXXX");
     Mesh *mesh = rd->meshs[i_mesh];
     printf("%d\n", MESH_GetNbVertice(mesh));
     for (unsigned int i_v = 0; i_v < MESH_GetNbVertice(mesh); i_v++) {
-
-      MeshVertex *p = MESH_GetVertex(mesh, i_v);
-      double pw = 1;
+      p = MESH_GetVertex(mesh, i_v);
 
       // World to camera
-      double camx = VECT_DotProduct(&rd->cam_u, p) + tx;
-      double camy = VECT_DotProduct(&rd->cam_v, p) + ty;
-      double camz = VECT_DotProduct(&rd->cam_w, p) + tz;
-      double camw = 1;
+      camx = VECT_DotProduct(&rd->cam_u, p) + rd->tx;
+      camy = VECT_DotProduct(&rd->cam_v, p) + rd->ty;
+      camz = -VECT_DotProduct(&rd->cam_w, p) + rd->tz;
 
       // Projection
-      double npx = (S * camx);
-      double npy = (S * camy);
-      double npz = (b * camz + bn * camw);
-      double npw = -camz;
-
-      // Normalisation homogene => cartesienne
-      double nnpx = npx / npw;
-      double nnpy = npy / npw;
-      double nnpz = npz / npw;
-
-      nnpx /= nnpz;
-      nnpy /= nnpz;
+      nnpx = (rd->s * camx) / camz;
+      nnpy = (rd->s * camy) / camz;
 
       // Rendu
-      uint32_t x = (uint32_t)((nnpx * scalex + 1) * 0.5 * rd->xmax);
-      uint32_t y = (uint32_t)((1 - (nnpy * scaley + 1) * 0.5) * rd->ymax);
-      printf("x = %u y = %u\n", x, y);
+      x = (uint32_t)((nnpx * rd->scalex + 1) * 0.5 * rd->xmax);
+      y = (uint32_t)((1 - (nnpy * rd->scaley + 1) * 0.5) * rd->ymax);
+
+      // printf("x = %u y = %u\n", x, y);
       if (x < rd->xmax && x >= 0 && y < rd->ymax && y >= 0)
         rd->plan_projection[y * rd->xmax + x] = CL_DEEPPINK;
     }
