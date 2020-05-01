@@ -33,6 +33,11 @@ struct Vector {
  * Variables
  ******************************************************************************/
 
+extern const struct Vector VECT_0;
+extern const struct Vector VECT_X;
+extern const struct Vector VECT_Y;
+extern const struct Vector VECT_Z;
+
 /*******************************************************************************
  * Prototypes
  ******************************************************************************/

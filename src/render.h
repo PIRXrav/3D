@@ -25,27 +25,26 @@ struct Render {
   struct Mesh **meshs; // Tableau de pointeur de mesh
 
   /*Plan*/
-  unsigned int xmax;
-  unsigned int ymax;
-  double fov_rad;
   struct Mesh *highlightedMesh;
   struct MeshFace *highlightedFace;
 
-  /* Raies */
-  // struct Vecteur **raies_dir;
-
   /* Camera */
+  double fov_rad;
   struct Vector cam_pos;
   struct Vector cam_u;
   struct Vector cam_v;
-  struct Vector cam_w;  // cam dir
-  struct Vector cam_wp; // précalcul unique
+  struct Vector cam_w; // cam dir
 
-  /* Projection */
-  color *plan_projection;
+  /* Précalcul raytracting */
+  struct Vector cam_wp;
+
+  /* Précalul Projection */
   double tx, ty, tz;     // changement de plan de la camera
   double s;              // Fc du fov
   double scalex, scaley; // relations à la taille de l'écran
+
+  /* Ecran */
+  struct Raster *raster; // Rendu de la scene 2D matrix
 };
 
 /*******************************************************************************

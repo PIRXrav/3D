@@ -32,7 +32,7 @@
  * Variables
  ******************************************************************************/
 
-const struct Vector VECT_NULL = {0, 0, 0};
+const struct Vector VECT_0 = {0, 0, 0};
 const struct Vector VECT_X = {1, 0, 0};
 const struct Vector VECT_Y = {0, 1, 0};
 const struct Vector VECT_Z = {0, 0, 1};

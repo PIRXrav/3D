@@ -1,6 +1,7 @@
 #include "color.h"
 #include "geo.h"
 #include "parsers/parser.h"
+#include "raster.h"
 #include "render.h"
 #include "window.h"
 #include <math.h>
@@ -42,7 +43,7 @@ void user_loop(struct hwindow *hw) {
   static struct Vector barycentre = {.25, .25, .25};
 
   static struct Vector cam_vect = {0, 0, -1};
-  static struct Vector cam_up_world = {0, 0, -1};
+  static struct Vector cam_up_world = {0, 0, 1};
 
   angle += 0.05;
 
@@ -64,17 +65,17 @@ void user_loop(struct hwindow *hw) {
 
   // Projection
   calc_projection(rd);
-  for (unsigned int y = 0; y < HW_GetY(hw); y++) {
-    for (unsigned int x = 0; x < HW_GetX(hw); x++) {
-      if (rd->plan_projection[y * rd->xmax + x].raw != CL_BLACK.raw)
-        HW_SetPx(hw, x, y, rd->plan_projection[y * rd->xmax + x]);
+  for (uint32_t y = 0; y < HW_GetY(hw); y++) {
+    for (uint32_t x = 0; x < HW_GetX(hw); x++) {
+      color c = RASTER_GetPixelxy(rd->raster, x, y);
+      if (c.raw != CL_BLACK.raw)
+        HW_SetPx(hw, x, y, c);
     }
   }
   // RD_Print(rd);
 }
 
 int main(void) {
-  // HW_start("Test", 900, 600, user_loop);
   // VECT_test();
   rd = RD_Init(X, Y);
   rd->highlightedMesh = 0;

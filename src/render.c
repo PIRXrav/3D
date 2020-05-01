@@ -6,7 +6,9 @@
 #include "color.h"
 #include "geo.h"
 #include "mesh.h"
+#include "raster.h"
 
+#include <assert.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -26,83 +28,7 @@
  * Internal function declaration
  ******************************************************************************/
 
-/*
- * Initialisation
- */
-struct Render *RD_Init(unsigned int xmax, unsigned int ymax) {
-  struct Render *ret = malloc(sizeof(struct Render));
-
-  ret->nb_meshs = 0;
-  ret->meshs = malloc(sizeof(struct mesh *) * ret->nb_meshs);
-
-  ret->xmax = xmax;
-  ret->ymax = ymax;
-
-  ret->highlightedMesh = NULL;
-  ret->highlightedFace = NULL;
-
-  ret->fov_rad = 1;
-  struct Vector cam_pos = {0, 0, 0};
-  struct Vector cam_forward = {-1, -1, 0};
-  struct Vector cam_up = {0, 0, 1};
-  RD_SetCam(ret, &cam_pos, &cam_forward, &cam_up);
-
-  // Projection values
-  ret->plan_projection = malloc(sizeof(color) * xmax * ymax);
-  ret->s = 1 / (tan(ret->fov_rad / 2));
-  ret->scalex = (double)ret->ymax / (double)ret->xmax;
-  ret->scaley = 1;
-  return ret;
-}
-
-/*
- * Initialisation
- */
-struct Render *RD_InitTetrahedrons(unsigned int xmax, unsigned int ymax) {
-  struct Render *ret = malloc(sizeof(struct Render));
-
-  unsigned int cote = 2;
-  ret->nb_meshs = cote * cote;
-  ret->meshs = malloc(sizeof(struct mesh *) * ret->nb_meshs);
-  for (unsigned int i = 0; i < cote; i++) {
-    for (unsigned int j = 0; j < cote; j++) {
-      static struct Vector pos;
-      VECT_Set(&pos, i, j, 0);
-      ret->meshs[i * cote + j] = MESH_InitTetrahedron(&pos);
-    }
-  }
-
-  ret->xmax = xmax;
-  ret->ymax = ymax;
-  printf("MAXMIN%d %d\n", xmax, ymax);
-
-  VECT_Set(&ret->cam_pos, -5, -5, 0);
-  VECT_Set(&ret->cam_u, 1, 0, 0);
-  VECT_Set(&ret->cam_v, 0, 1, 0);
-  VECT_Set(&ret->cam_w, 0, 0, -1);
-  VECT_Set(&ret->cam_wp, -1, -1, -1);
-  ret->fov_rad = 3;
-
-  return ret;
-}
-
-/* Ajoute une mesh au render, aucune copie n'est faite */
-void RD_AddMesh(struct Render *rd, struct Mesh *m) {
-  rd->nb_meshs++;
-  rd->meshs = realloc(rd->meshs, sizeof(struct mesh *) * rd->nb_meshs);
-  rd->meshs[rd->nb_meshs - 1] = m;
-}
-
-void RD_Print(struct Render *rd) {
-  printf(" ============ RENDER =========== \n");
-  printf("\tVECT CAM: ");
-  VECT_Print(&rd->cam_wp);
-  printf("\n");
-  for (unsigned int i_mesh = 0; i_mesh < rd->nb_meshs; i_mesh++) {
-    MESH_Print(rd->meshs[i_mesh]);
-    printf("\n");
-  }
-}
+static RasterPos projectionVertex(struct Render *rd, const struct Vector *p);
 
 /*
  * Calcule d'une raie
@@ -212,10 +138,10 @@ void RD_SetCam(struct Render *rd, const struct Vector *cam_pos,
 
   /* Précalcul w' */
   struct Vector un, vn, wn;
-  VECT_MultSca(&un, &rd->cam_u, -(double)rd->xmax / 2);
-  VECT_MultSca(&vn, &rd->cam_v, (double)rd->ymax / 2);
+  VECT_MultSca(&un, &rd->cam_u, -(double)rd->raster->xmax / 2);
+  VECT_MultSca(&vn, &rd->cam_v, (double)rd->raster->ymax / 2);
   VECT_MultSca(&wn, &rd->cam_w,
-               ((double)rd->ymax / 2) / tan(rd->fov_rad * 0.5));
+               ((double)rd->raster->ymax / 2) / tan(rd->fov_rad * 0.5));
   VECT_Add(&rd->cam_wp, &un, &vn);
   VECT_Sub(&rd->cam_wp, &rd->cam_wp, &wn);
 
@@ -226,47 +152,40 @@ void RD_SetCam(struct Render *rd, const struct Vector *cam_pos,
   rd->tz = +VECT_DotProduct(&rd->cam_w, &rd->cam_pos);
 }
 
-/*
- * 3D projection
- * http://www.cse.psu.edu/~rtc12/CSE486/lecture12.pdf
- */
-void calc_projection(struct Render *rd) {
-  // set 0:
-  for (unsigned int x = 0; x < rd->xmax; x++) {
-    for (unsigned int y = 0; y < rd->ymax; y++) {
-      rd->plan_projection[y * rd->xmax + x] = CL_BLACK;
+extern void calc_projection(struct Render *rd) {
+  // Couleur par default
+  RASTER_DrawFill(rd->raster, (color)0xFF000000); // Alpha
+  Mesh *mesh;
+  MeshFace *f;
+  MeshVertex *p;
+  // Wirefram
+  for (unsigned int i_mesh = 0; i_mesh < rd->nb_meshs; i_mesh++) {
+    mesh = rd->meshs[i_mesh];
+    for (unsigned int i_f = 0; i_f < MESH_GetNbFace(mesh); i_f++) {
+      f = MESH_GetFace(mesh, i_f);
+      RasterPos p1 = projectionVertex(rd, f->p0);
+      RasterPos p2 = projectionVertex(rd, f->p1);
+      RasterPos p3 = projectionVertex(rd, f->p2);
+      RASTER_DrawTriangle(rd->raster, &p1, &p2, &p3, CL_ORANGE);
     }
   }
-
-  Mesh *mesh;
-  MeshVertex *p;
-  double camx, camy, camz, nnpx, nnpy;
-  uint32_t x, y;
-
+  // Vertices
   for (unsigned int i_mesh = 0; i_mesh < rd->nb_meshs; i_mesh++) {
-    Mesh *mesh = rd->meshs[i_mesh];
-    printf("%d\n", MESH_GetNbVertice(mesh));
+    mesh = rd->meshs[i_mesh];
     for (unsigned int i_v = 0; i_v < MESH_GetNbVertice(mesh); i_v++) {
       p = MESH_GetVertex(mesh, i_v);
-
-      // World to camera
-      camx = VECT_DotProduct(&rd->cam_u, p) + rd->tx;
-      camy = VECT_DotProduct(&rd->cam_v, p) + rd->ty;
-      camz = -VECT_DotProduct(&rd->cam_w, p) + rd->tz;
-
-      // Projection
-      nnpx = (rd->s * camx) / camz;
-      nnpy = (rd->s * camy) / camz;
-
-      // Rendu
-      x = (uint32_t)((nnpx * rd->scalex + 1) * 0.5 * rd->xmax);
-      y = (uint32_t)((1 - (nnpy * rd->scaley + 1) * 0.5) * rd->ymax);
-
-      // printf("x = %u y = %u\n", x, y);
-      if (x < rd->xmax && x >= 0 && y < rd->ymax && y >= 0)
-        rd->plan_projection[y * rd->xmax + x] = CL_DEEPPINK;
+      RasterPos pc = projectionVertex(rd, p);
+      RASTER_DrawCircle(rd->raster, &pc, 5, CL_PAPAYAWHIP);
     }
   }
+  // Axes
+  RasterPos p0 = projectionVertex(rd, &VECT_0);
+  RasterPos px = projectionVertex(rd, &VECT_X);
+  RasterPos py = projectionVertex(rd, &VECT_Y);
+  RasterPos pz = projectionVertex(rd, &VECT_Z);
+  RASTER_DrawLine(rd->raster, &p0, &px, CL_RED);
+  RASTER_DrawLine(rd->raster, &p0, &py, CL_GREEN);
+  RASTER_DrawLine(rd->raster, &p0, &pz, CL_BLUE);
 }
 
 /*******************************************************************************
@@ -277,6 +196,73 @@ void calc_projection(struct Render *rd) {
  * Public function
  ******************************************************************************/
 
+/*
+ * Initialisation
+ */
+extern struct Render *RD_Init(unsigned int xmax, unsigned int ymax) {
+  struct Render *ret = malloc(sizeof(struct Render));
+
+  // Allocations
+  ret->nb_meshs = 0;
+  ret->meshs = malloc(sizeof(struct mesh *) * ret->nb_meshs);
+  assert(ret->meshs);
+  ret->raster = RASTER_Init(xmax, ymax);
+
+  ret->highlightedMesh = NULL;
+  ret->highlightedFace = NULL;
+
+  // cam
+  ret->fov_rad = 1;
+  struct Vector cam_pos = {0, 0, 0};
+  struct Vector cam_forward = {1, 0, 0};
+  struct Vector cam_up = {0, 0, 1};
+  RD_SetCam(ret, &cam_pos, &cam_forward, &cam_up);
+
+  // Projection values
+  ret->s = 1 / (tan(ret->fov_rad / 2));
+  ret->scalex = (double)ret->raster->ymax / (double)ret->raster->xmax;
+  ret->scaley = 1;
+  return ret;
+}
+
+/* Ajoute une mesh au render, aucune copie n'est faite */
+extern void RD_AddMesh(struct Render *rd, struct Mesh *m) {
+  rd->nb_meshs++;
+  rd->meshs = realloc(rd->meshs, sizeof(struct mesh *) * rd->nb_meshs);
+  rd->meshs[rd->nb_meshs - 1] = m;
+}
+
+void RD_Print(struct Render *rd) {
+  printf(" ============ RENDER =========== \n");
+  printf("\tVECT CAM: ");
+  VECT_Print(&rd->cam_wp);
+  printf("\n");
+  for (unsigned int i_mesh = 0; i_mesh < rd->nb_meshs; i_mesh++) {
+    MESH_Print(rd->meshs[i_mesh]);
+    printf("\n");
+  }
+}
 /*******************************************************************************
  * Internal function
  ******************************************************************************/
+
+/*
+ * 3D projection
+ * http://www.cse.psu.edu/~rtc12/CSE486/lecture12.pdf
+ */
+static RasterPos projectionVertex(struct Render *rd, const struct Vector *p) {
+  static double camx, camy, camz, nnpx, nnpy;
+  // World to camera
+  camx = VECT_DotProduct(&rd->cam_u, p) + rd->tx;
+  camy = VECT_DotProduct(&rd->cam_v, p) + rd->ty;
+  camz = -VECT_DotProduct(&rd->cam_w, p) + rd->tz;
+  // Projection
+  nnpx = (rd->s * camx) / camz;
+  nnpy = (rd->s * camy) / camz;
+  // Rendu
+  static RasterPos ps;
+  ps.x = (uint32_t)((nnpx * rd->scalex + 1) * 0.5 * rd->raster->xmax);
+  ps.y = (uint32_t)((1 - (nnpy * rd->scaley + 1) * 0.5) * rd->raster->ymax);
+  // printf("ps :[%d, %d]\n", ps.x, ps.y);
+  return ps;
+}
