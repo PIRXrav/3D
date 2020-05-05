@@ -226,6 +226,7 @@ static void HW_EventLoop(struct hwindow *hw) {
       break;
     case SDL_KEYDOWN:
       customEvent.data.key.state = 1;
+      // fallthrough
     case SDL_KEYUP:
       customEvent.type = EVENT_KEYBOARD;
       customEvent.data.key.code = event.key.keysym.sym;
@@ -240,6 +241,7 @@ static void HW_EventLoop(struct hwindow *hw) {
       break;
     case SDL_MOUSEBUTTONUP:
       customEvent.data.mouse.released = 1;
+      // fallthrough
     case SDL_MOUSEBUTTONDOWN:
       customEvent.type = EVENT_MOUSE;
       customEvent.data.mouse.x = event.button.x;

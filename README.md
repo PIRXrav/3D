@@ -21,4 +21,4 @@
 - scale dans le raster (fc DrawPx from NDC)
 - Tout ce fait dans Render et non dans le main.
 - fonction RenderWireframe, RenderProjection, RenderAxis ...
-- Disable [-Wimplicit-fallthrough=] warning
+- ~~[-Wimplicit-fallthrough=] : //fallthrough~~
