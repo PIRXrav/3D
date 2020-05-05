@@ -31,6 +31,10 @@ struct Render {
   /* Camera */
   double fov_rad;
   struct Vector cam_pos;
+  struct Vector cam_forward;
+  struct Vector cam_up_world;
+
+  /* Précalcul world <-> camera*/
   struct Vector cam_u;
   struct Vector cam_v;
   struct Vector cam_w; // cam dir

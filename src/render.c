@@ -116,25 +116,24 @@ extern color RD_RayTraceOnRD(const struct Render *rd, const struct Vector *ray,
 void RD_SetCam(struct Render *rd, const struct Vector *cam_pos,
                const struct Vector *cam_forward,
                const struct Vector *cam_up_world) {
-  static struct Vector cam_forward_1, cam_up_world_1;
-  VECT_Cpy(&cam_forward_1, cam_forward);
-  VECT_Cpy(&cam_up_world_1, cam_up_world);
-  // VECT_Normalise(&cam_forward_1);
-  // VECT_Normalise(&cam_up_world_1);
 
-  // Cam pos
-  VECT_Cpy(&rd->cam_pos, cam_pos);
+  // Mise a jout des variables maitresses
+  if (cam_pos != NULL)
+    VECT_Cpy(&rd->cam_pos, cam_pos);
+  if (cam_forward != NULL)
+    VECT_Cpy(&rd->cam_forward, cam_forward);
+  if (cam_up_world != NULL)
+    VECT_Cpy(&rd->cam_up_world, cam_up_world);
+
   // forward
-  VECT_Cpy(&rd->cam_w, &cam_forward_1);
+  VECT_Cpy(&rd->cam_w, &rd->cam_forward);
+  VECT_Normalise(&rd->cam_w);
   // right
-  VECT_CrossProduct(&rd->cam_u, &cam_up_world_1, &cam_forward_1);
+  VECT_CrossProduct(&rd->cam_u, &rd->cam_up_world, &rd->cam_forward);
+  VECT_Normalise(&rd->cam_u);
   // up
   VECT_CrossProduct(&rd->cam_v, &rd->cam_w, &rd->cam_u);
-
-  // JAJA la normalisation
-  VECT_Normalise(&rd->cam_u);
   VECT_Normalise(&rd->cam_v);
-  VECT_Normalise(&rd->cam_w);
 
   /* Précalcul w' */
   struct Vector un, vn, wn;

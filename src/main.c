@@ -27,18 +27,17 @@ void user_loop(unsigned int cpt) {
   printf("%d\n", cpt);
 
   static double angle = 0;
+  struct Vector cam_pos;
   static struct Vector barycentre = {.25, .25, .25};
-
   static struct Vector cam_vect = {0, 0, -1};
-  static struct Vector cam_up_world = {0, 0, 1};
 
   /* pos */
   angle += 0.05;
-  rd->cam_pos.x = cos(angle) * 5;     // + rd->mesh->vertices[0].x;
-  rd->cam_pos.y = sin(angle) * 5;     // + rd->mesh->vertices[0].y;
-  rd->cam_pos.z = sin(angle * 2) * 5; // + rd->mesh->vertices[0].y;
+  cam_pos.x = cos(angle) * 5;
+  cam_pos.y = sin(angle) * 5;
+  cam_pos.z = sin(angle * 2) * 5;
   VECT_Sub(&cam_vect, &rd->cam_pos, &barycentre);
-  RD_SetCam(rd, &rd->cam_pos, &cam_vect, &cam_up_world);
+  RD_SetCam(rd, &cam_pos, &cam_vect, NULL);
 
   RD_DrawRaytracing(rd);
   // RD_DrawFill(rd);
