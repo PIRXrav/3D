@@ -7,8 +7,6 @@
 #include <math.h>
 #include <stdio.h>
 
-const unsigned int X = 400;
-const unsigned int Y = 400;
 struct Render *rd;
 
 void mouse_event(const struct event *event) {
@@ -25,19 +23,8 @@ void mouse_event(const struct event *event) {
   }
 }
 
-void user_loop(struct hwindow *hw) {
-  /*
-  static int c = 0;
-  c++;
-  for (unsigned int i = 0; i < HW_GetX(hw); i++)
-    for (unsigned int j = 0; j < HW_GetY(hw); j++)
-      HW_SetPx(hw, i, j,
-               CL_rgb(255 * i / HW_GetX(hw), 255 * j / HW_GetY(hw),
-                      255 * (i + j) / (HW_GetX(hw) + HW_GetY(hw)) + c));
-  return;
-  */
-  static struct Vector ray;
-  static struct Vector hit; // Hit point
+void user_loop(unsigned int cpt) {
+  printf("%d\n", cpt);
 
   static double angle = 0;
   static struct Vector barycentre = {.25, .25, .25};
@@ -45,39 +32,24 @@ void user_loop(struct hwindow *hw) {
   static struct Vector cam_vect = {0, 0, -1};
   static struct Vector cam_up_world = {0, 0, 1};
 
-  angle += 0.05;
-
   /* pos */
+  angle += 0.05;
   rd->cam_pos.x = cos(angle) * 5;     // + rd->mesh->vertices[0].x;
   rd->cam_pos.y = sin(angle) * 5;     // + rd->mesh->vertices[0].y;
   rd->cam_pos.z = sin(angle * 2) * 5; // + rd->mesh->vertices[0].y;
-                                      // make
   VECT_Sub(&cam_vect, &rd->cam_pos, &barycentre);
   RD_SetCam(rd, &rd->cam_pos, &cam_vect, &cam_up_world);
 
-  // Raytracing
-  for (unsigned int y = 0; y < HW_GetY(hw); y++) {
-    for (unsigned int x = 0; x < HW_GetX(hw); x++) {
-      RD_CalcRayDir(rd, x, y, &ray);
-      HW_SetPx(hw, x, y, RD_RayTraceOnRD(rd, &ray, &hit));
-    }
-  }
-
-  // Projection
-  calc_projection(rd);
-  for (uint32_t y = 0; y < HW_GetY(hw); y++) {
-    for (uint32_t x = 0; x < HW_GetX(hw); x++) {
-      color c = RASTER_GetPixelxy(rd->raster, x, y);
-      if (c.raw != CL_BLACK.raw)
-        HW_SetPx(hw, x, y, c);
-    }
-  }
-  // RD_Print(rd);
+  RD_DrawRaytracing(rd);
+  // RD_DrawFill(rd);
+  RD_DrawWirefram(rd);
+  RD_DrawVertices(rd);
+  RD_DrawAxis(rd);
 }
 
 int main(void) {
   // VECT_test();
-  rd = RD_Init(X, Y);
+  rd = RD_Init(400, 400);
   rd->highlightedMesh = 0;
   RD_Print(rd);
 
@@ -89,12 +61,9 @@ int main(void) {
 
   // RD_Print(rd);
 
-  struct hwindow *fenetre = HW_Init("Rendu 3D", X, Y);
-
+  struct hwindow *fenetre = HW_Init("Rendu 3D", rd->raster);
   HW_SetCallback(fenetre, EVENT_MOUSE, mouse_event);
-
   HW_Loop(fenetre, user_loop);
-
   HW_Close(fenetre);
 
   return 0;

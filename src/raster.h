@@ -46,6 +46,7 @@ color RASTER_GetPixelxy(struct Raster *s, uint32_t x, uint32_t y);
 void RASTER_DrawFill(struct Raster *s, color c);
 
 void RASTER_DrawPixel(struct Raster *s, RasterPos p, color c);
+void RASTER_DrawPixelxy(struct Raster *s, uint32_t x, uint32_t y, color c);
 
 void RASTER_DrawLine(struct Raster *s, RasterPos *p1, RasterPos *p2, color c);
 

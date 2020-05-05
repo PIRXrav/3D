@@ -94,7 +94,10 @@ void RD_SetCam(struct Render *rd, const struct Vector *cam_pos,
                const struct Vector *cam_forward,
                const struct Vector *cam_up_world);
 
-//
-void calc_projection(struct Render *rd);
+void RD_DrawRaytracing(struct Render *rd);
+void RD_DrawWirefram(struct Render *rd);
+void RD_DrawVertices(struct Render *rd);
+void RD_DrawAxis(struct Render *rd);
+void RD_DrawFill(struct Render *rd);
 
 #endif /* _RENDER_H_ */
