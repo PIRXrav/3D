@@ -52,6 +52,9 @@ void RASTER_DrawLine(struct Raster *s, RasterPos *p1, RasterPos *p2, color c);
 void RASTER_DrawTriangle(struct Raster *s, RasterPos *p1, RasterPos *p2,
                          RasterPos *p3, color c);
 
+void RASTER_DrawFillTriangle(struct Raster *s, RasterPos *p1, RasterPos *p2,
+                             RasterPos *p3, color c);
+
 void RASTER_DrawCircle(struct Raster *s, RasterPos *p, int r, color c);
 
 #endif /* _RASTER_H_ */
