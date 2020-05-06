@@ -116,14 +116,14 @@ extern void TTY_Close(struct tty *tty) {
  *  Lancement du loop d'affichage
  */
 extern void TTY_Loop(struct tty *tty, void (*userfunc)(unsigned int)) {
+  TTY_Print(tty);
   printf("\033[?1049h\033[H\033[?25l");
-  while (tty->run && tty->cpt < 1000) {
+  while (tty->run) {
     if (halted)
       tty->run = 0;
     // Maj de la taille du terminal
     TTY_QuerySize(&tty->width, &tty->height);
     TTY_ResizeBuffer(tty);
-    // TTY_Print(tty);
 
     userfunc(tty->cpt);
 
@@ -178,8 +178,9 @@ static void TTY_Render(struct tty *tty) {
         TTY_RenderPixelPair(buffer, tty, x, y,
                             y + 1 == maxHeight ? (uint32_t)-1 : y + 1);
         printf(buffer);
-        /*for (int i = 0; i < 1500; i++)
-          buffer[0] += i;*/
+        // Delai pour que ça saccade pas (hum hum)
+        for (int i = 0; i < 500; i++)
+          buffer[0] += i;
       }
     }
     printf("\n");

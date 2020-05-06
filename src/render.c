@@ -175,10 +175,10 @@ extern struct Render *RD_Init(unsigned int xmax, unsigned int ymax) {
   ret->highlightedFace = NULL;
 
   // cam
-  ret->fov_rad = 1;
+  ret->fov_rad = 1.5;
   struct Vector cam_pos = {0, 0, 0};
   struct Vector cam_forward = {1, 0, 0};
-  struct Vector cam_up = {0, 0, 1};
+  struct Vector cam_up = {0, 1, 0};
   RD_SetCam(ret, &cam_pos, &cam_forward, &cam_up);
 
   // Projection values

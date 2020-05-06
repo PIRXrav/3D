@@ -34,16 +34,16 @@ void user_loop(unsigned int cpt) {
 
   /* pos */
   angle += 0.05;
-  cam_pos.x = cos(angle) * 5;
-  cam_pos.y = sin(angle) * 5;
-  cam_pos.z = sin(angle * 2) * 5;
+  cam_pos.x = cos(angle) * 3;
+  cam_pos.y = sin(angle) * 3;
+  cam_pos.z = sin(angle * 2) * 3;
   VECT_Sub(&cam_vect, &rd->cam_pos, &barycentre);
   RD_SetCam(rd, &cam_pos, &cam_vect, NULL);
 
-  // RD_DrawRaytracing(rd);
-  RD_DrawFill(rd);
-  RD_DrawWireframe(rd);
-  RD_DrawVertices(rd);
+  RD_DrawRaytracing(rd);
+  // RD_DrawFill(rd);
+  // RD_DrawWireframe(rd);
+  // RD_DrawVertices(rd);
   RD_DrawAxis(rd);
 }
 
@@ -63,18 +63,18 @@ void mainTerm() {
 }
 
 int main() {
-  rd = RD_Init(170, 80);
+  rd = RD_Init(400, 400);
   rd->highlightedMesh = 0;
   RD_Print(rd);
 
   unsigned nbMeshes;
-  struct Mesh **meshes = PARSER_Load("data/cube.obj", &nbMeshes);
+  struct Mesh **meshes = PARSER_Load("data/scene.obj", &nbMeshes);
   printf("Loaded mesh !\n");
   for (unsigned i = 0; i < nbMeshes; i++)
     RD_AddMesh(rd, meshes[i]);
 
-  // mainFenetre();
-  mainTerm();
+  mainFenetre();
+  // mainTerm();
 
   return 0;
 }
