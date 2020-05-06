@@ -59,6 +59,7 @@ struct Mesh **OBJ_Parse(FILE *file, unsigned *nbMeshes) {
 
   *nbMeshes = 0;
   int faceIndex = 0;
+  int verticesIndexOffset = 0;
 
   while ((entity = getNextEntity(buffer, 256, file)) != BLANK) {
 
@@ -79,12 +80,17 @@ struct Mesh **OBJ_Parse(FILE *file, unsigned *nbMeshes) {
       unsigned nbVertices = MAX_VERTICES_PER_FACE;
       parseFace(buffer, verticesIndex, &nbVertices);
 
-      MESH_AddFace(currentMesh,
-                   MESH_FACE_Init(MESH_GetVertex(currentMesh, verticesIndex[0]),
-                                  MESH_GetVertex(currentMesh, verticesIndex[1]),
-                                  MESH_GetVertex(currentMesh, verticesIndex[2]),
-                                  CL_rgb(50 + faceIndex * 2, faceIndex * 2,
-                                         50 + faceIndex)));
+      // TODO: check if vertices exists (plusieurs meshs avec les meme sommets)
+      MESH_AddFace(
+          currentMesh,
+          MESH_FACE_Init(
+              MESH_GetVertex(currentMesh,
+                             verticesIndex[0] - verticesIndexOffset),
+              MESH_GetVertex(currentMesh,
+                             verticesIndex[1] - verticesIndexOffset),
+              MESH_GetVertex(currentMesh,
+                             verticesIndex[2] - verticesIndexOffset),
+              CL_rgb(50 + faceIndex * 2, faceIndex * 2, 50 + faceIndex)));
       faceIndex++;
       break;
     case OBJECT:
@@ -92,6 +98,7 @@ struct Mesh **OBJ_Parse(FILE *file, unsigned *nbMeshes) {
       // une nouvelle
       if (currentMesh) {
         ARRLISTP_Add(meshes, currentMesh);
+        verticesIndexOffset += MESH_GetNbVertice(currentMesh);
       }
       currentMesh = MESH_Init();
       strtok(buffer, " ");
