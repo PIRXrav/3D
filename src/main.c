@@ -3,6 +3,7 @@
 #include "parsers/parser.h"
 #include "raster.h"
 #include "render.h"
+#include "terminal.h"
 #include "window.h"
 #include <math.h>
 #include <stdio.h>
@@ -24,7 +25,7 @@ void mouse_event(const struct event *event) {
 }
 
 void user_loop(unsigned int cpt) {
-  printf("%d\n", cpt);
+  // printf("%d\n", cpt);
 
   static double angle = 0;
   struct Vector cam_pos;
@@ -39,16 +40,30 @@ void user_loop(unsigned int cpt) {
   VECT_Sub(&cam_vect, &rd->cam_pos, &barycentre);
   RD_SetCam(rd, &cam_pos, &cam_vect, NULL);
 
-  RD_DrawRaytracing(rd);
-  // RD_DrawFill(rd);
+  // RD_DrawRaytracing(rd);
+  RD_DrawFill(rd);
   RD_DrawWireframe(rd);
   RD_DrawVertices(rd);
   RD_DrawAxis(rd);
 }
 
-int main(void) {
-  // VECT_test();
-  rd = RD_Init(400, 400);
+void mainFenetre() {
+
+  struct hwindow *fenetre = HW_Init("Rendu 3D", rd->raster);
+  HW_SetCallback(fenetre, EVENT_MOUSE, mouse_event);
+  HW_Loop(fenetre, user_loop);
+  HW_Close(fenetre);
+}
+
+void mainTerm() {
+
+  struct tty *tty = TTY_Init(rd->raster);
+  TTY_Loop(tty, user_loop);
+  TTY_Close(tty);
+}
+
+int main() {
+  rd = RD_Init(170, 80);
   rd->highlightedMesh = 0;
   RD_Print(rd);
 
@@ -58,12 +73,8 @@ int main(void) {
   for (unsigned i = 0; i < nbMeshes; i++)
     RD_AddMesh(rd, meshes[i]);
 
-  // RD_Print(rd);
-
-  struct hwindow *fenetre = HW_Init("Rendu 3D", rd->raster);
-  HW_SetCallback(fenetre, EVENT_MOUSE, mouse_event);
-  HW_Loop(fenetre, user_loop);
-  HW_Close(fenetre);
+  // mainFenetre();
+  mainTerm();
 
   return 0;
 }
