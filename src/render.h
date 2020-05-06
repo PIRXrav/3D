@@ -99,7 +99,7 @@ void RD_SetCam(struct Render *rd, const struct Vector *cam_pos,
                const struct Vector *cam_up_world);
 
 void RD_DrawRaytracing(struct Render *rd);
-void RD_DrawWirefram(struct Render *rd);
+void RD_DrawWireframe(struct Render *rd);
 void RD_DrawVertices(struct Render *rd);
 void RD_DrawAxis(struct Render *rd);
 void RD_DrawFill(struct Render *rd);

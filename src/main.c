@@ -41,7 +41,7 @@ void user_loop(unsigned int cpt) {
 
   RD_DrawRaytracing(rd);
   // RD_DrawFill(rd);
-  RD_DrawWirefram(rd);
+  RD_DrawWireframe(rd);
   RD_DrawVertices(rd);
   RD_DrawAxis(rd);
 }

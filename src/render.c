@@ -218,7 +218,7 @@ extern void RD_DrawRaytracing(struct Render *rd) {
   }
 }
 
-extern void RD_DrawWirefram(struct Render *rd) {
+extern void RD_DrawWireframe(struct Render *rd) {
   Mesh *mesh;
   MeshFace *f;
   // Wirefram
