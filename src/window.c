@@ -11,6 +11,7 @@
 
 #include "window.h"
 #include "containers/arraylist.h"
+#include "raster.h"
 #include <SDL2/SDL.h>
 #include <assert.h>
 #include <math.h>
@@ -42,13 +43,13 @@ struct hwindow {
   SDL_Window *window;
   SDL_Renderer *renderer;
   SDL_Texture *texture;
+  unsigned int width;
+  unsigned int height;
   /* Events */
   ArrayList *eventTypes;
   ArrayList *eventCallbacks;
   /* Buffer */
-  pixel *pixels;
-  unsigned int width;
-  unsigned int height;
+  struct Raster *raster; // Pointeur vers le raster
   /* State */
   int run;
   double fps;
@@ -89,13 +90,12 @@ void HW_SendEvent(struct hwindow *hw, const struct event *event);
 /*
  *  Initialisation d'une fenetre
  */
-struct hwindow *HW_Init(const char *name, unsigned int width,
-                        unsigned int height) {
+extern struct hwindow *HW_Init(const char *name, struct Raster *raster) {
   struct hwindow *ret = malloc(sizeof(struct hwindow));
   assert(ret);
 
-  ret->width = width;
-  ret->height = height;
+  ret->width = raster->xmax; // On initialise la fenetre à la taille du raster
+  ret->height = raster->ymax;
   ret->run = 1;
   ret->name = name;
   ret->framecpt = 0;
@@ -107,15 +107,16 @@ struct hwindow *HW_Init(const char *name, unsigned int width,
 
   ret->window =
       SDL_CreateWindow(name, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                       width, height, SDL_WINDOW_SHOWN);
+                       ret->width, ret->height, SDL_WINDOW_SHOWN);
 
   ret->renderer = SDL_CreateRenderer(ret->window, -1, SDL_RENDERER_ACCELERATED);
 
-  ret->texture = SDL_CreateTexture(ret->renderer, SDL_PIXELFORMAT_ARGB8888,
-                                   SDL_TEXTUREACCESS_STREAMING, width, height);
+  ret->texture =
+      SDL_CreateTexture(ret->renderer, SDL_PIXELFORMAT_ARGB8888,
+                        SDL_TEXTUREACCESS_STREAMING, ret->width, ret->height);
 
-  ret->pixels = malloc(width * height * sizeof(color));
-  assert(ret->pixels);
+  ret->raster = raster;
+  assert(ret->raster);
   return ret;
 }
 
@@ -126,7 +127,6 @@ void HW_Close(struct hwindow *hw) {
   SDL_DestroyTexture(hw->texture);
   SDL_DestroyRenderer(hw->renderer);
   SDL_DestroyWindow(hw->window);
-  free(hw->pixels);
   free(hw);
   SDL_Quit();
 }
@@ -134,7 +134,7 @@ void HW_Close(struct hwindow *hw) {
 /*
  *  Lancement et Initialisation de la fenetre
  */
-extern void HW_Loop(struct hwindow *hw, void (*userfunc)(struct hwindow *)) {
+extern void HW_Loop(struct hwindow *hw, void (*userfunc)(unsigned int)) {
   Uint64 start;
   Uint64 freq = SDL_GetPerformanceFrequency();
 
@@ -145,7 +145,7 @@ extern void HW_Loop(struct hwindow *hw, void (*userfunc)(struct hwindow *)) {
     HW_EventLoop(hw);
     /******* BEGIN USER CALL  ********/
 
-    userfunc(hw);
+    userfunc(hw->framecpt);
 
     /******** END USE CALL ***********/
     HW_Render(hw);
@@ -163,22 +163,13 @@ void HW_SetCallback(struct hwindow *hw, event_type type,
 }
 
 /*
- *  Mise a jour d'un pixel dans le buffer
- */
-extern void HW_SetPx(struct hwindow *hw, unsigned int x, unsigned int y,
-                     color c) {
-  assert(x < hw->width && y < hw->height);
-  hw->pixels[(hw->width * y) + x] = c;
-}
-
-/*
  * Affichage des informations de debug
  */
 extern void HW_Print(struct hwindow *hw) {
   printf("==================================\n");
   printf("HW %s:(%p)\n", hw->name, hw);
   printf("x=%d, y=%d\n", hw->width, hw->height);
-  printf("data addr : %p\n", hw->pixels);
+  printf("data addr : %p\n", hw->raster);
   printf("state run : %d\n", hw->run);
   printf("Frame freq: %fhz\n", hw->fps);
 }
@@ -203,7 +194,8 @@ extern inline unsigned int HW_GetY(struct hwindow *hw) { return hw->height; }
 static void HW_Render(struct hwindow *hw) {
   // SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
   // SDL_RenderClear(renderer);
-  SDL_UpdateTexture(hw->texture, NULL, hw->pixels, hw->width * 4);
+  SDL_UpdateTexture(hw->texture, NULL, hw->raster->screen,
+                    hw->raster->ymax * 4);
   SDL_RenderCopy(hw->renderer, hw->texture, NULL, NULL);
   SDL_RenderPresent(hw->renderer);
 }
@@ -226,6 +218,7 @@ static void HW_EventLoop(struct hwindow *hw) {
       break;
     case SDL_KEYDOWN:
       customEvent.data.key.state = 1;
+      // fallthrough
     case SDL_KEYUP:
       customEvent.type = EVENT_KEYBOARD;
       customEvent.data.key.code = event.key.keysym.sym;
@@ -240,6 +233,7 @@ static void HW_EventLoop(struct hwindow *hw) {
       break;
     case SDL_MOUSEBUTTONUP:
       customEvent.data.mouse.released = 1;
+      // fallthrough
     case SDL_MOUSEBUTTONDOWN:
       customEvent.type = EVENT_MOUSE;
       customEvent.data.mouse.x = event.button.x;

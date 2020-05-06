@@ -13,6 +13,7 @@
  ******************************************************************************/
 
 #include "color.h"
+#include "raster.h"
 #include <stdint.h>
 
 /*******************************************************************************
@@ -77,9 +78,7 @@ typedef void (*event_callback)(const struct event *data);
 /*
  *  Initialisation d'une fenetre
  */
-struct hwindow *HW_Init(const char *name, unsigned int width,
-                        unsigned int height);
-
+struct hwindow *HW_Init(const char *name, struct Raster *raster);
 /*
  *  Fermeture d'une fenetre
  */
@@ -88,12 +87,7 @@ void HW_Close(struct hwindow *hw);
 /*
  *  Lancement du loop evenements et affichage
  */
-void HW_Loop(struct hwindow *hw, void (*userfunc)(struct hwindow *));
-
-/*
- *  Mise a jour d'un pixel dans le buffer
- */
-void HW_SetPx(struct hwindow *hw, unsigned int x, unsigned int y, color c);
+void HW_Loop(struct hwindow *hw, void (*userfunc)(unsigned int));
 
 /*
  * Affichage des informations de debug

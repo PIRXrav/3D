@@ -116,25 +116,24 @@ extern color RD_RayTraceOnRD(const struct Render *rd, const struct Vector *ray,
 void RD_SetCam(struct Render *rd, const struct Vector *cam_pos,
                const struct Vector *cam_forward,
                const struct Vector *cam_up_world) {
-  static struct Vector cam_forward_1, cam_up_world_1;
-  VECT_Cpy(&cam_forward_1, cam_forward);
-  VECT_Cpy(&cam_up_world_1, cam_up_world);
-  // VECT_Normalise(&cam_forward_1);
-  // VECT_Normalise(&cam_up_world_1);
 
-  // Cam pos
-  VECT_Cpy(&rd->cam_pos, cam_pos);
+  // Mise a jout des variables maitresses
+  if (cam_pos != NULL)
+    VECT_Cpy(&rd->cam_pos, cam_pos);
+  if (cam_forward != NULL)
+    VECT_Cpy(&rd->cam_forward, cam_forward);
+  if (cam_up_world != NULL)
+    VECT_Cpy(&rd->cam_up_world, cam_up_world);
+
   // forward
-  VECT_Cpy(&rd->cam_w, &cam_forward_1);
+  VECT_Cpy(&rd->cam_w, &rd->cam_forward);
+  VECT_Normalise(&rd->cam_w);
   // right
-  VECT_CrossProduct(&rd->cam_u, &cam_up_world_1, &cam_forward_1);
+  VECT_CrossProduct(&rd->cam_u, &rd->cam_up_world, &rd->cam_forward);
+  VECT_Normalise(&rd->cam_u);
   // up
   VECT_CrossProduct(&rd->cam_v, &rd->cam_w, &rd->cam_u);
-
-  // JAJA la normalisation
-  VECT_Normalise(&rd->cam_u);
   VECT_Normalise(&rd->cam_v);
-  VECT_Normalise(&rd->cam_w);
 
   /* Précalcul w' */
   struct Vector un, vn, wn;
@@ -150,42 +149,6 @@ void RD_SetCam(struct Render *rd, const struct Vector *cam_pos,
   rd->tx = -VECT_DotProduct(&rd->cam_u, &rd->cam_pos);
   rd->ty = -VECT_DotProduct(&rd->cam_v, &rd->cam_pos);
   rd->tz = +VECT_DotProduct(&rd->cam_w, &rd->cam_pos);
-}
-
-extern void calc_projection(struct Render *rd) {
-  // Couleur par default
-  RASTER_DrawFill(rd->raster, (color)0xFF000000); // Alpha
-  Mesh *mesh;
-  MeshFace *f;
-  MeshVertex *p;
-  // Wirefram
-  for (unsigned int i_mesh = 0; i_mesh < rd->nb_meshs; i_mesh++) {
-    mesh = rd->meshs[i_mesh];
-    for (unsigned int i_f = 0; i_f < MESH_GetNbFace(mesh); i_f++) {
-      f = MESH_GetFace(mesh, i_f);
-      RasterPos p1 = projectionVertex(rd, f->p0);
-      RasterPos p2 = projectionVertex(rd, f->p1);
-      RasterPos p3 = projectionVertex(rd, f->p2);
-      RASTER_DrawTriangle(rd->raster, &p1, &p2, &p3, CL_ORANGE);
-    }
-  }
-  // Vertices
-  for (unsigned int i_mesh = 0; i_mesh < rd->nb_meshs; i_mesh++) {
-    mesh = rd->meshs[i_mesh];
-    for (unsigned int i_v = 0; i_v < MESH_GetNbVertice(mesh); i_v++) {
-      p = MESH_GetVertex(mesh, i_v);
-      RasterPos pc = projectionVertex(rd, p);
-      RASTER_DrawCircle(rd->raster, &pc, 5, CL_PAPAYAWHIP);
-    }
-  }
-  // Axes
-  RasterPos p0 = projectionVertex(rd, &VECT_0);
-  RasterPos px = projectionVertex(rd, &VECT_X);
-  RasterPos py = projectionVertex(rd, &VECT_Y);
-  RasterPos pz = projectionVertex(rd, &VECT_Z);
-  RASTER_DrawLine(rd->raster, &p0, &px, CL_RED);
-  RASTER_DrawLine(rd->raster, &p0, &py, CL_GREEN);
-  RASTER_DrawLine(rd->raster, &p0, &pz, CL_BLUE);
 }
 
 /*******************************************************************************
@@ -242,6 +205,64 @@ void RD_Print(struct Render *rd) {
     printf("\n");
   }
 }
+
+extern void RD_DrawRaytracing(struct Render *rd) {
+  // Raytracing
+  static struct Vector ray;
+  static struct Vector hit; // Hit point
+  for (unsigned int y = 0; y < rd->raster->ymax; y++) {
+    for (unsigned int x = 0; x < rd->raster->xmax; x++) {
+      RD_CalcRayDir(rd, x, y, &ray);
+      RASTER_DrawPixelxy(rd->raster, x, y, RD_RayTraceOnRD(rd, &ray, &hit));
+    }
+  }
+}
+
+extern void RD_DrawWirefram(struct Render *rd) {
+  Mesh *mesh;
+  MeshFace *f;
+  // Wirefram
+  for (unsigned int i_mesh = 0; i_mesh < rd->nb_meshs; i_mesh++) {
+    mesh = rd->meshs[i_mesh];
+    for (unsigned int i_f = 0; i_f < MESH_GetNbFace(mesh); i_f++) {
+      f = MESH_GetFace(mesh, i_f);
+      RasterPos p1 = projectionVertex(rd, f->p0);
+      RasterPos p2 = projectionVertex(rd, f->p1);
+      RasterPos p3 = projectionVertex(rd, f->p2);
+      RASTER_DrawTriangle(rd->raster, &p1, &p2, &p3, CL_ORANGE);
+    }
+  }
+}
+
+extern void RD_DrawVertices(struct Render *rd) {
+  Mesh *mesh;
+  MeshVertex *p;
+  // Vertices
+  for (unsigned int i_mesh = 0; i_mesh < rd->nb_meshs; i_mesh++) {
+    mesh = rd->meshs[i_mesh];
+    for (unsigned int i_v = 0; i_v < MESH_GetNbVertice(mesh); i_v++) {
+      p = MESH_GetVertex(mesh, i_v);
+      RasterPos pc = projectionVertex(rd, p);
+      RASTER_DrawCircle(rd->raster, &pc, 5, CL_PAPAYAWHIP);
+    }
+  }
+}
+
+extern void RD_DrawAxis(struct Render *rd) {
+  // Axes
+  RasterPos p0 = projectionVertex(rd, &VECT_0);
+  RasterPos px = projectionVertex(rd, &VECT_X);
+  RasterPos py = projectionVertex(rd, &VECT_Y);
+  RasterPos pz = projectionVertex(rd, &VECT_Z);
+  RASTER_DrawLine(rd->raster, &p0, &px, CL_RED);
+  RASTER_DrawLine(rd->raster, &p0, &py, CL_GREEN);
+  RASTER_DrawLine(rd->raster, &p0, &pz, CL_BLUE);
+}
+
+extern void RD_DrawFill(struct Render *rd) {
+  RASTER_DrawFill(rd->raster, (color)0xFF000000); // Alpha
+}
+
 /*******************************************************************************
  * Internal function
  ******************************************************************************/
