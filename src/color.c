@@ -38,6 +38,13 @@ color CL_Negate(color c) {
   return CL_rgba(255 - c.rgb.r, 255 - c.rgb.g, 255 - c.rgb.b, c.rgb.a);
 }
 
+color CL_Mix(color c1, color c2, float factor) {
+  return CL_rgba(c1.rgb.r * (1 - factor) + c2.rgb.r * factor,
+                 c1.rgb.g * (1 - factor) + c2.rgb.g * factor,
+                 c1.rgb.b * (1 - factor) + c2.rgb.b * factor,
+                 c1.rgb.a * (1 - factor) + c2.rgb.a * factor);
+}
+
 /*******************************************************************************
  * Internal function
  ******************************************************************************/

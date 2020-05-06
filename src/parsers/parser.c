@@ -4,6 +4,7 @@
 
 #include "parser.h"
 #include "parser_obj.h"
+#include <libgen.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -15,7 +16,7 @@
 /*******************************************************************************
  * Types
  ******************************************************************************/
-typedef struct Mesh **(*Parser)(FILE *, unsigned *);
+typedef struct Mesh **(*Parser)(FILE *, unsigned *, char *);
 
 /*******************************************************************************
  * Internal function declaration
@@ -43,7 +44,15 @@ struct Mesh **PARSER_Load(const char *filename, unsigned *nbMeshes) {
     fprintf(stderr, "[PARSER_Load] Unknown file format : %s\n", extension);
     return NULL;
   }
-  return parse(file, nbMeshes);
+
+  char *filenameCpy = malloc(strlen(filename) + 1);
+  strcpy(filenameCpy, filename);
+  char *fileDir = dirname(filenameCpy);
+
+  struct Mesh **meshes = parse(file, nbMeshes, fileDir);
+
+  free(filenameCpy);
+  return meshes;
 }
 /*******************************************************************************
  * Internal function

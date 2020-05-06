@@ -24,6 +24,6 @@
  * Prototypes
  ******************************************************************************/
 
-struct Mesh **OBJ_Parse(FILE *file, unsigned *nbMeshes);
+struct Mesh **OBJ_Parse(FILE *file, unsigned *nbMeshes, char *dir);
 
 #endif /* _PARSER_OBJ_H_ */

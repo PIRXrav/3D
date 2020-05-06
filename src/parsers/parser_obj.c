@@ -16,6 +16,8 @@
 
 #define MAX_VERTICES_PER_FACE 3
 
+#define NB_ENTITY 10
+
 /*******************************************************************************
  * Types
  ******************************************************************************/
@@ -27,8 +29,19 @@ typedef enum entity_type {
   COMMENT = 1,
   VERTEX = 2,
   FACE = 3,
-  OBJECT = 4
+  OBJECT = 4,
+  MATERIAL_LIB = 5,
+  MATERIAL = 6,
+
+  MTL_DECLARATION = 10,
+  MTL_AMBIENT = 11,
+  MTL_DIFFUSE = 12,
 } entity_type;
+
+struct material {
+  color color;
+  char name[50];
+};
 
 /*******************************************************************************
  * Internal function declaration
@@ -42,6 +55,13 @@ entity_type getNextEntity(char *buffer, unsigned max, FILE *file);
 /* Parses a line containing face information */
 void parseFace(char *line, unsigned *indexes, unsigned *nbVertices);
 
+/* Parses MTL */
+ArrayList *MTL_Parse(char *mtllib);
+
+/* Finds material by name in material list */
+void find_material(const ArrayList *materialList, const char *name,
+                   struct material *res);
+
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -49,13 +69,16 @@ void parseFace(char *line, unsigned *indexes, unsigned *nbVertices);
 /*******************************************************************************
  * Public function
  ******************************************************************************/
-
-struct Mesh **OBJ_Parse(FILE *file, unsigned *nbMeshes) {
+// TODO: utiliser strtok_r pour rendre tous ca thread-safe
+struct Mesh **OBJ_Parse(FILE *file, unsigned *nbMeshes, char *dir) {
   char buffer[256];
 
   entity_type entity;
   struct Mesh *currentMesh = NULL;
   ArrayList *meshes = ARRLISTP_Create();
+
+  ArrayList *materials = NULL;
+  struct material currentMaterial = {CL_BLACK, ""};
 
   *nbMeshes = 0;
   int faceIndex = 0;
@@ -83,14 +106,13 @@ struct Mesh **OBJ_Parse(FILE *file, unsigned *nbMeshes) {
       // TODO: check if vertices exists (plusieurs meshs avec les meme sommets)
       MESH_AddFace(
           currentMesh,
-          MESH_FACE_Init(
-              MESH_GetVertex(currentMesh,
-                             verticesIndex[0] - verticesIndexOffset),
-              MESH_GetVertex(currentMesh,
-                             verticesIndex[1] - verticesIndexOffset),
-              MESH_GetVertex(currentMesh,
-                             verticesIndex[2] - verticesIndexOffset),
-              CL_rgb(50 + faceIndex * 2, faceIndex * 2, 50 + faceIndex)));
+          MESH_FACE_Init(MESH_GetVertex(currentMesh,
+                                        verticesIndex[0] - verticesIndexOffset),
+                         MESH_GetVertex(currentMesh,
+                                        verticesIndex[1] - verticesIndexOffset),
+                         MESH_GetVertex(currentMesh,
+                                        verticesIndex[2] - verticesIndexOffset),
+                         currentMaterial.color));
       faceIndex++;
       break;
     case OBJECT:
@@ -107,10 +129,30 @@ struct Mesh **OBJ_Parse(FILE *file, unsigned *nbMeshes) {
       faceIndex = 0;
 
       break;
+    case MATERIAL_LIB:
+      strtok(buffer, " ");
+      char *mtllib = strtok(NULL, " ");
+      char filename[256];
+      sprintf(filename, "%s/%s", dir, mtllib);
+      materials = MTL_Parse(filename);
+      break;
+    case MATERIAL:
+      if (!materials) {
+        fprintf(stderr, "[OBJ_Parse] Warning : using materials without "
+                        "declaring a material library first\n");
+      } else {
+        strtok(buffer, " ");
+        char *materialName = strtok(NULL, " ");
+        find_material(materials, materialName, &currentMaterial);
+      }
+      break;
     default:
       fprintf(stderr, "[OBJ_Parse] Warning : unsupported entity\n");
     }
   }
+
+  if (materials)
+    ARRLIST_Free(materials);
 
   // On ajoute la derniere mesh
   ARRLISTP_Add(meshes, currentMesh);
@@ -123,6 +165,76 @@ struct Mesh **OBJ_Parse(FILE *file, unsigned *nbMeshes) {
 /*******************************************************************************
  * Internal function
  ******************************************************************************/
+
+ArrayList *MTL_Parse(char *mtllib) {
+
+  FILE *file = fopen(mtllib, "rb");
+  if (!file) {
+    fprintf(stderr, "[MTL_Parse] Error : cannot open '%s'\n", mtllib);
+  }
+
+  char buffer[256];
+
+  ArrayList *materials = ARRLIST_Create(sizeof(struct material));
+  struct material current;
+  color ambient, diffuse;
+
+  entity_type entity;
+  int noCurrentMaterial = 1;
+  while ((entity = getNextEntity(buffer, 256, file)) != BLANK) {
+
+    switch (entity) {
+    case MTL_DECLARATION:
+      if (!noCurrentMaterial) {
+        current.color = CL_Mix(ambient, diffuse, .5);
+        ARRLIST_Add(materials, &current);
+      }
+
+      strtok(buffer, " ");
+      char *name = strtok(NULL, " ");
+      strcpy(current.name, name);
+      noCurrentMaterial = 0;
+      break;
+    case MTL_AMBIENT: {
+      float r, g, b;
+      sscanf(buffer, "Ka %f %f %f", &r, &g, &b);
+      ambient =
+          CL_rgb((uint8_t)(r * 255), (uint8_t)(g * 255), (uint8_t)(b * 255));
+    } break;
+    case MTL_DIFFUSE: {
+      float r, g, b;
+      sscanf(buffer, "Kd %f %f %f", &r, &g, &b);
+      diffuse =
+          CL_rgb((uint8_t)(r * 255), (uint8_t)(g * 255), (uint8_t)(b * 255));
+    } break;
+    default:
+      fprintf(stderr, "[MTL_Parse] Warning : unsupported entity\n");
+    }
+  }
+
+  // On ajoute le dernier material parse, si on a en a parse au moins un
+  if (!noCurrentMaterial) {
+    current.color = CL_Mix(ambient, diffuse, .5);
+    ARRLIST_Add(materials, &current);
+  }
+
+  ARRLIST_Fit(materials);
+  return materials;
+}
+
+void find_material(const ArrayList *materialList, const char *name,
+                   struct material *res) {
+
+  for (uint32_t i = 0; i < ARRLIST_GetSize(materialList); i++) {
+    struct material *mat = ARRLIST_Get(materialList, i);
+    if (!strcmp(name, mat->name)) {
+      *res = *mat;
+      return;
+    }
+  }
+
+  fprintf(stderr, "[OBJ_Parse] Warning : unknown material '%s'\n", name);
+}
 
 void parseFace(char *line, unsigned *indexes, unsigned *nbVertices) {
   unsigned currentNb = 0;
@@ -146,18 +258,22 @@ entity_type getEntityType(char *line) {
     i++;
   }
   unsigned length = strchr(line, ' ') - line;
-  if (!strncmp(line, "", length))
-    return BLANK;
-  else if (!strncmp(line, "#", length))
-    return COMMENT;
-  else if (!strncmp(line, "v", length))
-    return VERTEX;
-  else if (!strncmp(line, "f", length))
-    return FACE;
-  else if (!strncmp(line, "o", length))
-    return OBJECT;
-  else
-    return UNSUPPORTED;
+
+  char *rulesDirectors[NB_ENTITY] = {"",       "#",      "v",      "f",
+                                     "o",      "mtllib", "usemtl",
+
+                                     "newmtl", "Ka",     "Kd"};
+  entity_type rulesTokens[NB_ENTITY] = {
+      BLANK,           COMMENT,      VERTEX,     FACE,
+      OBJECT,          MATERIAL_LIB, MATERIAL,
+
+      MTL_DECLARATION, MTL_AMBIENT,  MTL_DIFFUSE};
+
+  for (uint32_t i = 0; i < NB_ENTITY; i++) {
+    if (!strncmp(line, rulesDirectors[i], length))
+      return rulesTokens[i];
+  }
+  return UNSUPPORTED;
 }
 
 entity_type getNextEntity(char *buffer, unsigned max, FILE *file) {
@@ -165,6 +281,11 @@ entity_type getNextEntity(char *buffer, unsigned max, FILE *file) {
   do {
     if (!fgets(buffer, max, file))
       return BLANK;
+
+    char *newlinePos = strchr(buffer, '\n');
+    if (newlinePos)
+      *newlinePos = 0;
+
     entity = getEntityType(buffer);
   } while (entity == BLANK || entity == COMMENT || entity == UNSUPPORTED);
   return entity;
