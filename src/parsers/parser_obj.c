@@ -80,11 +80,16 @@ struct Mesh **OBJ_Parse(FILE *file, unsigned *nbMeshes, char *dir) {
   ArrayList *materials = NULL;
   struct material currentMaterial = {CL_BLACK, ""};
 
-  *nbMeshes = 0;
   int faceIndex = 0;
   int verticesIndexOffset = 0;
 
   while ((entity = getNextEntity(buffer, 256, file)) != BLANK) {
+    // Si on ne declare pas l'objet alors qu'on en a besoin, on en cree un
+    if (!currentMesh && (entity == VERTEX || entity == FACE)) {
+      fprintf(stderr, "[OBJ_Parse] Warning : no object definition before "
+                      "face definitions, creating one\n");
+      currentMesh = MESH_Init();
+    }
 
     switch (entity) {
     case VERTEX: {
@@ -92,13 +97,7 @@ struct Mesh **OBJ_Parse(FILE *file, unsigned *nbMeshes, char *dir) {
       sscanf(buffer, "v %lf %lf %lf", &v.x, &v.y, &v.z);
       MESH_AddVertex(currentMesh, MESH_VERT_Init(v.x, v.y, v.z));
     } break;
-    case FACE:
-      if (!currentMesh) {
-        fprintf(stderr, "[OBJ_Parse] Warning : no object definition before "
-                        "face definitions, creating one\n");
-        currentMesh = MESH_Init();
-      }
-
+    case FACE: {
       unsigned verticesIndex[MAX_VERTICES_PER_FACE];
       unsigned nbVertices = MAX_VERTICES_PER_FACE;
       parseFace(buffer, verticesIndex, &nbVertices);
@@ -114,11 +113,12 @@ struct Mesh **OBJ_Parse(FILE *file, unsigned *nbMeshes, char *dir) {
                                         verticesIndex[2] - verticesIndexOffset),
                          currentMaterial.color));
       faceIndex++;
-      break;
+    } break;
     case OBJECT:
       // Nouvelle mesh : on ajoute la precedente a la liste et on travaille sur
       // une nouvelle
       if (currentMesh) {
+        printf("Added a mesh\n");
         ARRLISTP_Add(meshes, currentMesh);
         verticesIndexOffset += MESH_GetNbVertice(currentMesh);
       }

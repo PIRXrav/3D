@@ -4,6 +4,7 @@
 
 #include "parser.h"
 #include "parser_obj.h"
+#include <errno.h>
 #include <libgen.h>
 #include <stdio.h>
 #include <string.h>
@@ -33,9 +34,12 @@ const Parser PARSERS_FUNCS[] = {OBJ_Parse};
  * Public function
  ******************************************************************************/
 struct Mesh **PARSER_Load(const char *filename, unsigned *nbMeshes) {
+  *nbMeshes = 0;
+
   FILE *file = fopen(filename, "rb");
   if (!file) {
-    perror("[PARSER_Load] Impossible d'ouvrir le fichier");
+    fprintf(stderr, "[PARSER_Load] Impossible d'ouvrir le fichier %s : %s",
+            filename, strerror(errno));
     return NULL;
   }
   char *extension = strrchr(filename, '.');
