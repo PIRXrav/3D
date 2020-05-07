@@ -28,21 +28,21 @@ void user_loop(unsigned int cpt) {
   // printf("%d\n", cpt);
 
   static double angle = 0;
-  struct Vector cam_pos;
-  static struct Vector barycentre = {.25, .25, .25};
+  struct Vector cam_pos = {0, 0, 0};
+  static struct Vector barycentre = {0, 0, 0};
   static struct Vector cam_vect = {0, 0, -1};
 
   /* pos */
-  angle += 0.05;
-  cam_pos.x = cos(angle) * 3;
-  cam_pos.y = sin(angle) * 3;
-  cam_pos.z = sin(angle * 2) * 3;
+  angle += 0.005;
+  cam_pos.x = cos(angle) * 10;
+  cam_pos.y = cos(angle / 4) * 10;
+  cam_pos.z = sin(angle) * 10;
   VECT_Sub(&cam_vect, &rd->cam_pos, &barycentre);
   RD_SetCam(rd, &cam_pos, &cam_vect, NULL);
 
-  RD_DrawRaytracing(rd);
-  // RD_DrawFill(rd);
-  // RD_DrawWireframe(rd);
+  // RD_DrawRaytracing(rd);
+  RD_DrawFill(rd);
+  RD_DrawWireframe(rd);
   // RD_DrawVertices(rd);
   RD_DrawAxis(rd);
 }
@@ -63,12 +63,12 @@ void mainTerm() {
 }
 
 int main() {
-  rd = RD_Init(400, 400);
+  rd = RD_Init(900, 900);
   rd->highlightedMesh = 0;
   RD_Print(rd);
 
   unsigned nbMeshes;
-  struct Mesh **meshes = PARSER_Load("data/scene.obj", &nbMeshes);
+  struct Mesh **meshes = PARSER_Load("data/extern/cow.obj", &nbMeshes);
   printf("Loaded mesh !\n");
   for (unsigned i = 0; i < nbMeshes; i++)
     RD_AddMesh(rd, meshes[i]);

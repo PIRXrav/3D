@@ -27,3 +27,5 @@
 - Ajout du parsing des matériaux dans parser_obj
 - Ajout de rebonds dans le Raytracing
 - Ajout de la lumière dans le render classique
+- CLIPPING projecton !
+- Z buffer
