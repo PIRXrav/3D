@@ -59,6 +59,9 @@ extern MeshFace *MESH_FACE_Set(MeshFace *mf, MeshVertex *p0, MeshVertex *p1,
                                MeshVertex *p2, color c);
 extern MeshFace *MESH_FACE_Init(MeshVertex *p1, MeshVertex *p2, MeshVertex *p3,
                                 color c);
+extern MeshFace **MESH_FACE_FromVertices(MeshVertex **vertices,
+                                         unsigned nbVertices, unsigned *nbFaces,
+                                         color c);
 extern void MESH_FACE_Print(struct MeshFace *face);
 
 // Mesh
@@ -68,6 +71,7 @@ extern size_t MESH_GetNbVertice(const Mesh *mesh);
 extern MeshFace *MESH_GetFace(const Mesh *mesh, size_t index);
 extern MeshVertex *MESH_GetVertex(const Mesh *mesh, size_t index);
 extern MeshVertex *MESH_AddVertex(Mesh *mesh, MeshVertex *vertex);
+extern void MESH_AddFaces(Mesh *mesh, MeshFace **faces, unsigned nbFaces);
 extern MeshFace *MESH_AddFace(Mesh *mesh, MeshFace *face);
 extern void MESH_SetName(Mesh *mesh, const char *name);
 extern Mesh *MESH_InitTetrahedron(MeshVertex *origin);

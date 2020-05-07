@@ -14,7 +14,7 @@
  * Macros
  ******************************************************************************/
 
-#define MAX_VERTICES_PER_FACE 3
+#define MAX_VERTICES_PER_FACE 32
 
 #define NB_ENTITY 10
 
@@ -80,7 +80,6 @@ struct Mesh **OBJ_Parse(FILE *file, unsigned *nbMeshes, char *dir) {
   ArrayList *materials = NULL;
   struct material currentMaterial = {CL_GRAY, ""};
 
-  int faceIndex = 0;
   int verticesIndexOffset = 0;
 
   while ((entity = getNextEntity(buffer, 256, file)) != BLANK) {
@@ -102,17 +101,22 @@ struct Mesh **OBJ_Parse(FILE *file, unsigned *nbMeshes, char *dir) {
       unsigned nbVertices = MAX_VERTICES_PER_FACE;
       parseFace(buffer, verticesIndex, &nbVertices);
 
-      // TODO: check if vertices exists (plusieurs meshs avec les meme sommets)
-      MESH_AddFace(
-          currentMesh,
-          MESH_FACE_Init(MESH_GetVertex(currentMesh,
-                                        verticesIndex[0] - verticesIndexOffset),
-                         MESH_GetVertex(currentMesh,
-                                        verticesIndex[1] - verticesIndexOffset),
-                         MESH_GetVertex(currentMesh,
-                                        verticesIndex[2] - verticesIndexOffset),
-                         currentMaterial.color));
-      faceIndex++;
+      MeshVertex **vertices = malloc(sizeof(MeshVertex *) * nbVertices);
+      for (unsigned i = 0; i < nbVertices; i++)
+        vertices[i] =
+            MESH_GetVertex(currentMesh, verticesIndex[i] - verticesIndexOffset);
+
+      // TODO: check if vertices exists (si plusieurs meshs avec les meme
+      // sommets)
+      unsigned nbFaces = 0;
+      struct MeshFace **faces = MESH_FACE_FromVertices(
+          vertices, nbVertices, &nbFaces, currentMaterial.color);
+      printf("Face of %u vertices decomposed in %u triangles\n", nbVertices,
+             nbFaces);
+      MESH_AddFaces(currentMesh, faces, nbFaces);
+
+      free(faces);
+      free(vertices);
     } break;
     case OBJECT:
       // Nouvelle mesh : on ajoute la precedente a la liste et on travaille sur
@@ -126,7 +130,6 @@ struct Mesh **OBJ_Parse(FILE *file, unsigned *nbMeshes, char *dir) {
       strtok(buffer, " ");
       char *name = strtok(NULL, " ");
       MESH_SetName(currentMesh, name);
-      faceIndex = 0;
 
       break;
     case MATERIAL_LIB:
