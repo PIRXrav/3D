@@ -24,8 +24,9 @@
 - ~~[-Wimplicit-fallthrough=] : //fallthrough~~
 - ~~Ajout affichage dans le terminal~~
 - Fix bug affichage terminal quand la fréquence est trop élevée
-- Ajout du parsing des matériaux dans parser_obj
+- Ajout du parsing des matériaux dans parser_obj [Basique fait]
 - Ajout de rebonds dans le Raytracing
 - Ajout de la lumière dans le render classique
 - CLIPPING projecton !
 - Z buffer
+- Dans MESH_AddVertex gerer les duplications
