@@ -78,7 +78,7 @@ struct Mesh **OBJ_Parse(FILE *file, unsigned *nbMeshes, char *dir) {
   ArrayList *meshes = ARRLISTP_Create();
 
   ArrayList *materials = NULL;
-  struct material currentMaterial = {CL_BLACK, ""};
+  struct material currentMaterial = {CL_GRAY, ""};
 
   int faceIndex = 0;
   int verticesIndexOffset = 0;

@@ -43,7 +43,7 @@ void TTY_Loop(struct tty *tty, void (*userfunc)(unsigned int));
 void TTY_Print(struct tty *tty);
 
 /*
- *  get largeur terminal
+ *  get largeur d'affichage terminal
  */
 uint32_t TTY_GetW(struct tty *tty);
 
@@ -51,5 +51,10 @@ uint32_t TTY_GetW(struct tty *tty);
  *  get hauteur d'affichage du terminal
  */
 uint32_t TTY_GetH(struct tty *tty);
+
+/*
+ * Recupere la taille reelle du terminal
+ */
+void TTY_QuerySize(uint32_t *w, uint32_t *h);
 
 #endif /* _TERMINAL_H */
