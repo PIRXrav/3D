@@ -166,12 +166,12 @@ void HW_SetCallback(struct hwindow *hw, event_type type,
  * Affichage des informations de debug
  */
 extern void HW_Print(struct hwindow *hw) {
-  printf("==================================\n");
-  printf("HW %s:(%p)\n", hw->name, hw);
-  printf("x=%d, y=%d\n", hw->width, hw->height);
-  printf("data addr : %p\n", hw->raster);
-  printf("state run : %d\n", hw->run);
-  printf("Frame freq: %fhz\n", hw->fps);
+  // printf("==================================\n");
+  // printf("HW %s:(%p)\n", hw->name, hw);
+  // printf("x=%d, y=%d\n", hw->width, hw->height);
+  // printf("data addr : %p\n", hw->raster);
+  // printf("state run : %d\n", hw->run);
+  printf("\rFrame[%d] freq: %fhz", hw->framecpt, hw->fps);
 }
 
 /*
@@ -195,7 +195,7 @@ static void HW_Render(struct hwindow *hw) {
   // SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
   // SDL_RenderClear(renderer);
   SDL_UpdateTexture(hw->texture, NULL, hw->raster->screen,
-                    hw->raster->ymax * 4);
+                    hw->raster->xmax * 4);
   SDL_RenderCopy(hw->renderer, hw->texture, NULL, NULL);
   SDL_RenderPresent(hw->renderer);
 }

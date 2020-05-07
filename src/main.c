@@ -27,16 +27,17 @@ void mouse_event(const struct event *event) {
 void user_loop(unsigned int cpt) {
   // printf("%d\n", cpt);
 
-  static double angle = 0;
+  static double angle = 7.1;
   struct Vector cam_pos = {0, 0, 0};
-  static struct Vector barycentre = {0, 0, 0};
+  static struct Vector barycentre = {0, 00, 0};
   static struct Vector cam_vect = {0, 0, -1};
 
   /* pos */
   angle += 0.005;
-  cam_pos.x = cos(angle) * 10;
-  cam_pos.y = cos(angle / 4) * 10;
-  cam_pos.z = sin(angle) * 10;
+  double d = 1500;
+  cam_pos.x = cos(angle) * d;
+  cam_pos.y = 1000; // cos(angle / 2) * d;
+  cam_pos.z = sin(angle) * d;
   VECT_Sub(&cam_vect, &rd->cam_pos, &barycentre);
   RD_SetCam(rd, &cam_pos, &cam_vect, NULL);
 
@@ -44,7 +45,7 @@ void user_loop(unsigned int cpt) {
   RD_DrawFill(rd);
   RD_DrawWireframe(rd);
   // RD_DrawVertices(rd);
-  RD_DrawAxis(rd);
+  // RD_DrawAxis(rd);
 }
 
 void mainFenetre() {
@@ -63,12 +64,12 @@ void mainTerm() {
 }
 
 int main() {
-  rd = RD_Init(900, 900);
+  rd = RD_Init(900, 600);
   rd->highlightedMesh = 0;
   RD_Print(rd);
 
   unsigned nbMeshes;
-  struct Mesh **meshes = PARSER_Load("data/extern/cow.obj", &nbMeshes);
+  struct Mesh **meshes = PARSER_Load("data/extern/elephant.obj", &nbMeshes);
   printf("Loaded mesh !\n");
   for (unsigned i = 0; i < nbMeshes; i++)
     RD_AddMesh(rd, meshes[i]);

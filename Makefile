@@ -42,6 +42,23 @@ assets:
 	wget https://groups.csail.mit.edu/graphics/classes/6.837/F03/models/teapot.obj -O data/extern/teapot.obj;
 	wget https://groups.csail.mit.edu/graphics/classes/6.837/F03/models/cow-nonormals.obj -O data/extern/cow.obj;
 	wget https://groups.csail.mit.edu/graphics/classes/6.837/F03/models/teddy.obj -O data/extern/teddy.obj;
+	wget https://graphics.stanford.edu/~mdfisher/Data/Meshes/bunny.obj -O data/extern/bunny.obj
+
+asset_elephant:
+	wget http://graphics.im.ntu.edu.tw/~robin/courses/gm05/model/elephav.obj.gz -O /tmp/xxx.obj.gz;
+	gunzip /tmp/xxx.obj.gz
+	mv /tmp/xxx.obj  data/extern/elephant.obj
+
+
+asset_mba:
+	wget http://graphics.im.ntu.edu.tw/~robin/courses/gm05/model/mba1.obj.gz -O /tmp/xxx.obj.gz;
+	gunzip /tmp/xxx.obj.gz
+	mv /tmp/xxx.obj  data/extern/mba.obj
+
+asset_venus:
+	wget http://graphics.im.ntu.edu.tw/~robin/courses/gm05/model/venusv.obj.gz -O /tmp/xxx.obj.gz;
+	gunzip /tmp/xxx.obj.gz
+	mv /tmp/xxx.obj  data/extern/venus.obj
 
 clean:
 	rm -rf obj/
