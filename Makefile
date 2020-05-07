@@ -9,7 +9,6 @@ DIRS=$(patsubst src/%,obj/%,$(shell find src/ -type d)) bin/tests obj/tests
 TESTS=$(wildcard tests/*.c)
 TEST_BINS=$(patsubst tests/%.c,bin/tests/%,$(TESTS))
 
-
 all: $(DIRS) $(EXEC)
 
 
@@ -36,6 +35,13 @@ obj/tests/%.o: tests/%.c
 
 $(DIRS): %:
 	mkdir -p $@
+
+assets:
+	mkdir -p data/extern/
+	wget https://groups.csail.mit.edu/graphics/classes/6.837/F03/models/pumpkin_tall_10k.obj -O data/extern/pumpkin.obj;
+	wget https://groups.csail.mit.edu/graphics/classes/6.837/F03/models/teapot.obj -O data/extern/teapot.obj;
+	wget https://groups.csail.mit.edu/graphics/classes/6.837/F03/models/cow-nonormals.obj -O data/extern/cow.obj;
+	wget https://groups.csail.mit.edu/graphics/classes/6.837/F03/models/teddy.obj -O data/extern/teddy.obj;
 
 clean:
 	rm -rf obj/
