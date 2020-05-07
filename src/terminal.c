@@ -59,11 +59,6 @@ static void TTY_RenderPixelPair(char *buffer, struct tty *tty, uint32_t x,
                                 uint32_t y1, uint32_t y2);
 
 /*
- * Recupere la taille reelle du terminal
- */
-static void TTY_QuerySize(uint32_t *w, uint32_t *h);
-
-/*
  * Met a jour le buffer de sortie pour la taille du terminal
  * et le le synchronise avec le buffer de stdout
  */
@@ -148,6 +143,13 @@ extern inline uint32_t TTY_GetW(struct tty *tty) { return tty->width; }
 
 extern inline uint32_t TTY_GetH(struct tty *tty) { return tty->height; }
 
+extern void TTY_QuerySize(uint32_t *w, uint32_t *h) {
+  struct winsize size;
+  ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
+  *w = size.ws_col;
+  *h = size.ws_row * 2;
+}
+
 /*******************************************************************************
  * Internal function
  ******************************************************************************/
@@ -196,13 +198,6 @@ static void TTY_RenderPixelPair(char *buffer, struct tty *tty, uint32_t x,
 
   sprintf(buffer, "\x1b[48;2;%u;%u;%um\x1b[38;2;%u;%u;%um\u2584\x1b[0m",
           bg.rgb.r, bg.rgb.g, bg.rgb.b, fg.rgb.r, fg.rgb.g, fg.rgb.b);
-}
-
-static void TTY_QuerySize(uint32_t *w, uint32_t *h) {
-  struct winsize size;
-  ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
-  *w = size.ws_col;
-  *h = size.ws_row * 2;
 }
 
 static void TTY_SignalReceived(int signal) {

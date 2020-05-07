@@ -7,6 +7,10 @@
 #include "window.h"
 #include <math.h>
 #include <stdio.h>
+#include <string.h>
+
+#define MODE_TERMINAL 0
+#define MODE_SDL2 1
 
 struct Render *rd;
 
@@ -62,19 +66,50 @@ void mainTerm() {
   TTY_Close(tty);
 }
 
-int main() {
-  rd = RD_Init(400, 400);
-  rd->highlightedMesh = 0;
-  RD_Print(rd);
+int main(int argc, char **argv) {
+
+  char *modele = "data/cube.obj";
+  unsigned w = 400;
+  unsigned h = 400;
+  int mode = MODE_SDL2;
+
+  if (argc >= 2) {
+    if (!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")) {
+      printf("Usage %s [graphic|terminal [modelFile]]\n", argv[0]);
+      return 0;
+    }
+
+    if (!strcmp(argv[1], "graphic"))
+      mode = MODE_SDL2;
+    else if (!strcmp(argv[1], "terminal")) {
+      TTY_QuerySize(&w, &h);
+      mode = MODE_TERMINAL;
+    } else {
+      printf("Unknown display mode %s\n", argv[1]);
+      return 1;
+    }
+  }
+  if (argc >= 3) {
+    modele = argv[2];
+  }
+
+  rd = RD_Init(w, h);
 
   unsigned nbMeshes;
-  struct Mesh **meshes = PARSER_Load("data/scene.obj", &nbMeshes);
-  printf("Loaded mesh !\n");
+  printf("Loading %s...\n", modele);
+  struct Mesh **meshes = PARSER_Load(modele, &nbMeshes);
+  printf("Loaded %u meshs !\n", nbMeshes);
   for (unsigned i = 0; i < nbMeshes; i++)
     RD_AddMesh(rd, meshes[i]);
 
-  mainFenetre();
-  // mainTerm();
+  switch (mode) {
+  case MODE_SDL2:
+    mainFenetre();
+    break;
+  case MODE_TERMINAL:
+    mainTerm();
+    break;
+  }
 
   return 0;
 }
