@@ -31,3 +31,5 @@
 - Z buffer
 - Dans MESH_AddVertex gerer les duplications
 - Gérer les logs de manière convenable (fonction de log paramètrable)
+- Ajout d'un moteur de rendu pur ASCII
+- Ajout du chargement de plusieurs fichiers

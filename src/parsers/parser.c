@@ -36,16 +36,26 @@ const Parser PARSERS_FUNCS[] = {OBJ_Parse};
 struct Mesh **PARSER_Load(const char *filename, unsigned *nbMeshes) {
   *nbMeshes = 0;
 
-  FILE *file = fopen(filename, "rb");
-  if (!file) {
-    fprintf(stderr, "[PARSER_Load] Impossible d'ouvrir le fichier %s : %s",
-            filename, strerror(errno));
-    return NULL;
-  }
   char *extension = strrchr(filename, '.');
   const Parser parse = getParser(extension);
   if (!parse) {
-    fprintf(stderr, "[PARSER_Load] Unknown file format : %s\n", extension);
+    char formats[512] = {0};
+    for (unsigned i = 0; i < NB_PARSERS; i++) {
+      strcat(formats, PARSERS_EXTS[i]);
+      if (i != NB_PARSERS - 1)
+        strcat(formats, ", ");
+    }
+    fprintf(
+        stderr,
+        "[PARSER_Load] Unknown file format : %s, supported formats are [%s]\n",
+        extension, formats);
+    return NULL;
+  }
+
+  FILE *file = fopen(filename, "rb");
+  if (!file) {
+    fprintf(stderr, "[PARSER_Load] Impossible d'ouvrir le fichier %s : %s\n",
+            filename, strerror(errno));
     return NULL;
   }
 
