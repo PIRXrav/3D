@@ -74,24 +74,46 @@ int main(int argc, char **argv) {
   unsigned h = 400;
   int mode = MODE_SDL2;
 
-  if (argc >= 2) {
-    if (!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")) {
-      printf("Usage %s [graphic|terminal [modelFile]]\n", argv[0]);
-      return 0;
-    }
+  char *helpstr =
+      "\033[31mNAME\033[m                                              \n"
+      "      3D renderer                                               \n"
+      "\033[31mSYNOPSIS\033[m                                          \n"
+      "      \033[31m%s\033[m [\033[32mOPTIONS\033[m]\n"
+      "      \033[31m%s\033[m -g -f data/extern/elephant.obj -x=900 -y=600\n"
+      "\033[31mDESCRIPTION\033[m                                       \n"
+      "      \033[31m-h\033[m        display help menu                 \n"
+      "      \033[31m-g\033[m        set graphic output                \n"
+      "      \033[31m-t\033[m        set terminal output               \n"
+      "      \033[31m-f\033[m \033[32mFILE\033[m    set 3D file        \n"
+      "      \033[31m-x\033[m=\033[32mSIZE\033[m    set windows width  \n"
+      "      \033[31m-y\033[m=\033[32mSIZE\033[m    set windows height \n"
+      "                                                                \n";
 
-    if (!strcmp(argv[1], "graphic"))
+  for (int optind = 1; optind < argc; optind++) {
+    switch (argv[optind][1]) {
+    case 'g':
       mode = MODE_SDL2;
-    else if (!strcmp(argv[1], "terminal")) {
-      TTY_QuerySize(&w, &h);
+      break;
+    case 't':
       mode = MODE_TERMINAL;
-    } else {
-      printf("Unknown display mode %s\n", argv[1]);
-      return 1;
+      break;
+    case 'f':
+      modele = argv[++optind];
+      break;
+    case 'x':
+      sscanf(argv[optind], "-x=%d", &w);
+      break;
+    case 'y':
+      sscanf(argv[optind], "-y=%d", &h);
+      break;
+    case 'h':
+      printf(helpstr, argv[0], argv[0]);
+      exit(EXIT_SUCCESS);
+      break;
+    default:
+      fprintf(stderr, "Usage: %s -h\n", argv[0]);
+      exit(EXIT_FAILURE);
     }
-  }
-  if (argc >= 3) {
-    modele = argv[2];
   }
 
   rd = RD_Init(w, h);
