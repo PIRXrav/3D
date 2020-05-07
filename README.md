@@ -30,3 +30,4 @@
 - CLIPPING projecton !
 - Z buffer
 - Dans MESH_AddVertex gerer les duplications
+- Gérer les logs de manière convenable (fonction de log paramètrable)

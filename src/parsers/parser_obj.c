@@ -111,8 +111,6 @@ struct Mesh **OBJ_Parse(FILE *file, unsigned *nbMeshes, char *dir) {
       unsigned nbFaces = 0;
       struct MeshFace **faces = MESH_FACE_FromVertices(
           vertices, nbVertices, &nbFaces, currentMaterial.color);
-      printf("Face of %u vertices decomposed in %u triangles\n", nbVertices,
-             nbFaces);
       MESH_AddFaces(currentMesh, faces, nbFaces);
 
       free(faces);
@@ -122,7 +120,6 @@ struct Mesh **OBJ_Parse(FILE *file, unsigned *nbMeshes, char *dir) {
       // Nouvelle mesh : on ajoute la precedente a la liste et on travaille sur
       // une nouvelle
       if (currentMesh) {
-        printf("Added a mesh\n");
         ARRLISTP_Add(meshes, currentMesh);
         verticesIndexOffset += MESH_GetNbVertice(currentMesh);
       }
