@@ -171,6 +171,7 @@ ArrayList *MTL_Parse(char *mtllib) {
   FILE *file = fopen(mtllib, "rb");
   if (!file) {
     fprintf(stderr, "[MTL_Parse] Error : cannot open '%s'\n", mtllib);
+    return NULL;
   }
 
   char buffer[256];
