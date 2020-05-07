@@ -1,6 +1,6 @@
 # Blender v2.82 (sub 7) OBJ File: ''
 # www.blender.org
-mtllib icospere-320.mtl
+mtllib icosphere-320.mtl
 o Icosphere
 v 0.000000 -0.500000 0.000000
 v 0.361804 -0.223610 0.262863
