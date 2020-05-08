@@ -261,6 +261,7 @@ void TESTDRAW(uint32_t x, uint32_t y, void **args) {
   Vector *p2 = &((struct MeshFace *)args[1])->p1->sc;
   Vector *p3 = &((struct MeshFace *)args[1])->p2->sc;
 
+  // to INT
   p1->x = (double)(int)(p1->x);
   p1->y = (double)(int)(p1->y);
 
@@ -270,39 +271,35 @@ void TESTDRAW(uint32_t x, uint32_t y, void **args) {
   p3->x = (double)(int)(p3->x);
   p3->y = (double)(int)(p3->y);
 
-  // TODO : OPTIMISATION !
+  // Barycentre
+  double denum =
+      (p2->y - p3->y) * (p1->x - p3->x) + (p3->x - p2->x) * (p1->y - p3->y);
+  double w1 =
+      ((p2->y - p3->y) * (x - p3->x) + (p3->x - p2->x) * (y - p3->y)) / denum;
+  double w2 =
+      ((p3->y - p1->y) * (x - p3->x) + (p1->x - p3->x) * (y - p3->y)) / denum;
+  double w3 = 1 - w1 - w2;
 
-  // Normal du plan
+  w1 = w1 > 0 ? w1 : 0;
+  w2 = w2 > 0 ? w2 : 0;
+  w3 = w3 > 0 ? w3 : 0;
 
-  double xn =
-      (p2->y - p1->y) * (p3->z - p1->z) - (p3->y - p1->y) * (p2->z - p1->z);
-  double yn =
-      (p3->x - p1->x) * (p2->z - p1->z) - (p2->x - p1->x) * (p3->z - p1->z);
-  double zn =
-      (p2->x - p1->x) * (p3->y - p1->y) - (p3->x - p1->x) * (p2->y - p1->y);
-  double z4 = (p1->x * xn + p1->y * yn + p1->z * zn - x * xn - y * yn) / zn;
+  double sum = (w1 + w2 + w3);
+  w1 /= sum;
+  w2 /= sum;
+  w3 /= sum;
 
-  if (fabs(zn) <= 0.01) {
-    return;
-    RASTER_DrawPixelxy(args[0], x, y, CL_YELLOW);
-    return;
-  }
-
-  double seuil = 2500;
+  double z4 = w1 * p1->z + w2 * p2->z + w3 * p3->z;
+  double seuil = 3000;
   // printf("%f\n", z4);
   if (z4 >= seuil) {
-    return;
+    // printf("s[%f]:{%f %f %f}\n", z4, w1, w2, w3);
     RASTER_DrawPixelxy(args[0], x, y, CL_PURPLE);
-    return;
-  }
-  if (z4 < 1000) {
-    return;
-    RASTER_DrawPixelxy(args[0], x, y, CL_BLUE);
     return;
   }
 
   if (RASTER_GetPixelxy(args[0], x, y).rgb.r <
-      CL_Mix(CL_RED, CL_BLACK, z4 / seuil).rgb.r)
+      CL_Mix(CL_WHITE, CL_BLACK, z4 / seuil).rgb.r)
     RASTER_DrawPixelxy(args[0], x, y, CL_Mix(CL_WHITE, CL_BLACK, z4 / seuil));
   // printf("%f", ((struct MeshFace *)args[1])->p0->x);
 }
