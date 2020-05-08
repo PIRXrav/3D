@@ -57,7 +57,8 @@ void RASTER_DrawTriangle(struct Raster *s, RasterPos *p1, RasterPos *p2,
 void RASTER_DrawCircle(struct Raster *s, RasterPos *p, int r, color c);
 
 void RASTER_GenerateFillTriangle(RasterPos *p1, RasterPos *p2, RasterPos *p3,
-                                 void (*callbackxy)(uint32_t, uint32_t, void *),
-                                 void *args);
+                                 void (*callbackxy)(uint32_t, uint32_t,
+                                                    void **),
+                                 void **args);
 
 #endif /* _RASTER_H_ */

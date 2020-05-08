@@ -235,9 +235,10 @@ extern void RD_DrawWireframe(struct Render *rd) {
   }
 }
 
-void TESTDRAW(uint32_t x, uint32_t y, void *raster) {
+void TESTDRAW(uint32_t x, uint32_t y, void **args) {
   // printf("%d %d\n", x, y);
-  RASTER_DrawPixelxy(raster, x, y, CL_GREEN);
+  RASTER_DrawPixelxy(args[0], x, y, CL_GREEN);
+  // printf("%f", ((struct MeshFace *)args[1])->p0->x);
 }
 
 extern void RD_DrawZbuffTESTFUNC(struct Render *rd) {
@@ -254,7 +255,10 @@ extern void RD_DrawZbuffTESTFUNC(struct Render *rd) {
       RasterPos rp1 = {(uint32_t)p1.x, (uint32_t)p1.y};
       RasterPos rp2 = {(uint32_t)p2.x, (uint32_t)p2.y};
       RasterPos rp3 = {(uint32_t)p3.x, (uint32_t)p3.y};
-      RASTER_GenerateFillTriangle(&rp1, &rp2, &rp3, TESTDRAW, rd->raster);
+      void *args[2];
+      args[0] = rd->raster;
+      args[1] = f;
+      RASTER_GenerateFillTriangle(&rp1, &rp2, &rp3, TESTDRAW, args);
     }
   }
 }

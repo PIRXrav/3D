@@ -25,20 +25,20 @@ void swap_pos(RasterPos **p1, RasterPos **p2);
 // TODO: optimiser en ecrivant tout d'un bloc
 static void RASTER_DrawHorizontalLine(uint32_t x1, uint32_t x2, uint32_t y,
                                       void (*callbackxy)(uint32_t, uint32_t,
-                                                         void *),
-                                      void *args);
+                                                         void **),
+                                      void **args);
 
 /**
  * http://www.sunshine2k.de/coding/java/TriangleRasterization/TriangleRasterization.html#algo2
  */
 static void RASTER_DrawFillBottomFlatTriangle(
     RasterPos *p1, RasterPos *p2, RasterPos *p3,
-    void (*callbackxy)(uint32_t, uint32_t, void *), void *args);
+    void (*callbackxy)(uint32_t, uint32_t, void **), void **args);
 
 static void
 RASTER_DrawFillTopFlatTriangle(RasterPos *p1, RasterPos *p2, RasterPos *p3,
-                               void (*callbackxy)(uint32_t, uint32_t, void *),
-                               void *args);
+                               void (*callbackxy)(uint32_t, uint32_t, void **),
+                               void **args);
 
 /*******************************************************************************
  * Variables
@@ -130,8 +130,8 @@ extern void RASTER_DrawTriangle(struct Raster *s, RasterPos *p1, RasterPos *p2,
 
 extern void
 RASTER_GenerateFillTriangle(RasterPos *p1, RasterPos *p2, RasterPos *p3,
-                            void (*callbackxy)(uint32_t, uint32_t, void *),
-                            void *args) {
+                            void (*callbackxy)(uint32_t, uint32_t, void **),
+                            void **args) {
   // On trie p1, p2, p3 par ordre ascendant en ordonnees
   if (p1->y > p2->y) {
     if (p2->y > p3->y)      // p3, p2, p1
@@ -229,8 +229,8 @@ inline void swap_pos(RasterPos **p1, RasterPos **p2) {
 // TODO: optimiser en ecrivant tout d'un bloc
 static void RASTER_DrawHorizontalLine(uint32_t x1, uint32_t x2, uint32_t y,
                                       void (*callbackxy)(uint32_t, uint32_t,
-                                                         void *),
-                                      void *args) {
+                                                         void **),
+                                      void **args) {
   // swap si pas en ordre
   if (x1 > x2) {
     x1 ^= x2;
@@ -248,7 +248,7 @@ static void RASTER_DrawHorizontalLine(uint32_t x1, uint32_t x2, uint32_t y,
  */
 static void RASTER_DrawFillBottomFlatTriangle(
     RasterPos *p1, RasterPos *p2, RasterPos *p3,
-    void (*callbackxy)(uint32_t, uint32_t, void *), void *args) {
+    void (*callbackxy)(uint32_t, uint32_t, void **), void **args) {
 
   float x1 = p1->x, y1 = p1->y, x2 = p2->x, y2 = p2->y, x3 = p3->x, y3 = p3->y;
 
@@ -268,8 +268,8 @@ static void RASTER_DrawFillBottomFlatTriangle(
 
 static void
 RASTER_DrawFillTopFlatTriangle(RasterPos *p1, RasterPos *p2, RasterPos *p3,
-                               void (*callbackxy)(uint32_t, uint32_t, void *),
-                               void *args) {
+                               void (*callbackxy)(uint32_t, uint32_t, void **),
+                               void **args) {
 
   float x1 = p1->x, y1 = p1->y, x2 = p2->x, y2 = p2->y, x3 = p3->x, y3 = p3->y;
   float invslope1 = (x3 - x1) / (y3 - y1);
