@@ -256,8 +256,51 @@ extern void RD_DrawWireframe(struct Render *rd) {
 }
 
 void TESTDRAW(uint32_t x, uint32_t y, void **args) {
-  // printf("%d %d\n", x, y);
-  RASTER_DrawPixelxy(args[0], x, y, CL_GREEN);
+
+  Vector *p1 = &((struct MeshFace *)args[1])->p0->sc;
+  Vector *p2 = &((struct MeshFace *)args[1])->p1->sc;
+  Vector *p3 = &((struct MeshFace *)args[1])->p2->sc;
+
+  // to INT
+  p1->x = (double)(int)(p1->x);
+  p1->y = (double)(int)(p1->y);
+
+  p2->x = (double)(int)(p2->x);
+  p2->y = (double)(int)(p2->y);
+
+  p3->x = (double)(int)(p3->x);
+  p3->y = (double)(int)(p3->y);
+
+  // Barycentre
+  double denum =
+      (p2->y - p3->y) * (p1->x - p3->x) + (p3->x - p2->x) * (p1->y - p3->y);
+  double w1 =
+      ((p2->y - p3->y) * (x - p3->x) + (p3->x - p2->x) * (y - p3->y)) / denum;
+  double w2 =
+      ((p3->y - p1->y) * (x - p3->x) + (p1->x - p3->x) * (y - p3->y)) / denum;
+  double w3 = 1 - w1 - w2;
+
+  w1 = w1 > 0 ? w1 : 0;
+  w2 = w2 > 0 ? w2 : 0;
+  w3 = w3 > 0 ? w3 : 0;
+
+  double sum = (w1 + w2 + w3);
+  w1 /= sum;
+  w2 /= sum;
+  w3 /= sum;
+
+  double z4 = w1 * p1->z + w2 * p2->z + w3 * p3->z;
+  double seuil = 3000;
+  // printf("%f\n", z4);
+  if (z4 >= seuil) {
+    // printf("s[%f]:{%f %f %f}\n", z4, w1, w2, w3);
+    RASTER_DrawPixelxy(args[0], x, y, CL_PURPLE);
+    return;
+  }
+
+  if (RASTER_GetPixelxy(args[0], x, y).rgb.r <
+      CL_Mix(CL_WHITE, CL_BLACK, z4 / seuil).rgb.r)
+    RASTER_DrawPixelxy(args[0], x, y, CL_Mix(CL_WHITE, CL_BLACK, z4 / seuil));
   // printf("%f", ((struct MeshFace *)args[1])->p0->x);
 }
 

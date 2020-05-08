@@ -33,14 +33,14 @@ void user_loop(unsigned int cpt) {
 
   static double angle = 7.1;
   struct Vector cam_pos = {0, 0, 0};
-  static struct Vector barycentre = {0, 0, 0};
+  static struct Vector barycentre = {0, 500, 0};
   static struct Vector cam_vect = {0, 0, 0};
 
   /* pos */
   angle += 0.005;
   double d = 1500;
   cam_pos.x = cos(angle) * d;
-  cam_pos.y = 1000; // cos(angle / 2) * d;
+  cam_pos.y = cos(angle / 2) * d;
   cam_pos.z = sin(angle) * d;
   VECT_Sub(&cam_vect, &rd->cam_pos, &barycentre);
   RD_SetCam(rd, &cam_pos, &cam_vect, NULL);
@@ -52,8 +52,8 @@ void user_loop(unsigned int cpt) {
   // RD_DrawRaytracing(rd);
   RD_DrawFill(rd);
   RD_DrawZbuffTESTFUNC(rd);
-  RD_DrawWireframe(rd);
-  RD_DrawVertices(rd);
+  // RD_DrawWireframe(rd);
+  // RD_DrawVertices(rd);
   RD_DrawAxis(rd);
 }
 
