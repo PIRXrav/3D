@@ -140,7 +140,6 @@ extern void HW_Loop(struct hwindow *hw, void (*userfunc)(unsigned int)) {
 
   // HW_Print(hw);
   while (hw->run) {
-    HW_Print(hw);
     start = SDL_GetPerformanceCounter();
     HW_EventLoop(hw);
     /******* BEGIN USER CALL  ********/
@@ -153,6 +152,7 @@ extern void HW_Loop(struct hwindow *hw, void (*userfunc)(unsigned int)) {
     const double seconds = (end - start) / (double)freq;
     hw->fps = 1 / seconds;
     hw->framecpt += 1;
+    HW_Print(hw);
   }
 }
 

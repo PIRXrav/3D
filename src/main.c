@@ -22,7 +22,7 @@ void mouse_event(const struct event *event) {
     RD_CalcRayDir(rd, event->data.mouse.x, event->data.mouse.y, &ray);
     RD_RayCastOnRD(rd, &ray, &collisionPoint, &mesh, &face);
 
-    printf("Mesh : %p, face : %p\n", mesh, face);
+    // printf("Mesh : %p, face : %p\n", mesh, face);
     rd->highlightedMesh = mesh;
     rd->highlightedFace = face;
   }
@@ -33,8 +33,8 @@ void user_loop(unsigned int cpt) {
 
   static double angle = 7.1;
   struct Vector cam_pos = {0, 0, 0};
-  static struct Vector barycentre = {0, 00, 0};
-  static struct Vector cam_vect = {0, 0, -1};
+  static struct Vector barycentre = {0, 0, 0};
+  static struct Vector cam_vect = {0, 0, 0};
 
   /* pos */
   angle += 0.005;
@@ -47,7 +47,8 @@ void user_loop(unsigned int cpt) {
 
   // RD_DrawRaytracing(rd);
   RD_DrawFill(rd);
-  RD_DrawWireframe(rd);
+  RD_DrawZbuffTESTFUNC(rd);
+  // RD_DrawWireframe(rd);
   // RD_DrawVertices(rd);
   // RD_DrawAxis(rd);
 }

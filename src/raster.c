@@ -22,16 +22,23 @@
 
 void swap_pos(RasterPos **p1, RasterPos **p2);
 
-static void RASTER_DrawFillBottomFlatTriangle(struct Raster *s, RasterPos *p1,
-                                              RasterPos *p2, RasterPos *p3,
-                                              color c);
+// TODO: optimiser en ecrivant tout d'un bloc
+static void RASTER_DrawHorizontalLine(uint32_t x1, uint32_t x2, uint32_t y,
+                                      void (*callbackxy)(uint32_t, uint32_t,
+                                                         void *),
+                                      void *args);
 
-static void RASTER_DrawFillTopFlatTriangle(struct Raster *s, RasterPos *p1,
-                                           RasterPos *p2, RasterPos *p3,
-                                           color c);
+/**
+ * http://www.sunshine2k.de/coding/java/TriangleRasterization/TriangleRasterization.html#algo2
+ */
+static void RASTER_DrawFillBottomFlatTriangle(
+    RasterPos *p1, RasterPos *p2, RasterPos *p3,
+    void (*callbackxy)(uint32_t, uint32_t, void *), void *args);
 
-static void RASTER_DrawHorizontalLine(struct Raster *s, uint32_t x1,
-                                      uint32_t x2, uint32_t y, color c);
+static void
+RASTER_DrawFillTopFlatTriangle(RasterPos *p1, RasterPos *p2, RasterPos *p3,
+                               void (*callbackxy)(uint32_t, uint32_t, void *),
+                               void *args);
 
 /*******************************************************************************
  * Variables
@@ -40,6 +47,11 @@ static void RASTER_DrawHorizontalLine(struct Raster *s, uint32_t x1,
 /*******************************************************************************
  * Public function
  ******************************************************************************/
+
+void RP_Cpy(RasterPos *p1, RasterPos *p2) {
+  p1->x = p2->x;
+  p1->y = p2->y;
+}
 
 extern struct Raster *RASTER_Init(uint32_t xmax, uint32_t ymax) {
   struct Raster *s = malloc(sizeof(struct Raster));
@@ -116,9 +128,10 @@ extern void RASTER_DrawTriangle(struct Raster *s, RasterPos *p1, RasterPos *p2,
   RASTER_DrawLine(s, p3, p1, c);
 }
 
-extern void RASTER_DrawFillTriangle(struct Raster *s, RasterPos *p1,
-                                    RasterPos *p2, RasterPos *p3, color c) {
-
+extern void
+RASTER_GenerateFillTriangle(RasterPos *p1, RasterPos *p2, RasterPos *p3,
+                            void (*callbackxy)(uint32_t, uint32_t, void *),
+                            void *args) {
   // On trie p1, p2, p3 par ordre ascendant en ordonnees
   if (p1->y > p2->y) {
     if (p2->y > p3->y)      // p3, p2, p1
@@ -150,17 +163,17 @@ extern void RASTER_DrawFillTriangle(struct Raster *s, RasterPos *p1,
   // Cas triviaux :
   // Triangle plat en bas
   if (p2->y == p3->y)
-    RASTER_DrawFillBottomFlatTriangle(s, p1, p2, p3, c);
+    RASTER_DrawFillBottomFlatTriangle(p1, p2, p3, callbackxy, args);
   // Triangle plat en haut
   else if (p1->y == p2->y) {
-    RASTER_DrawFillTopFlatTriangle(s, p1, p2, p3, c);
+    RASTER_DrawFillTopFlatTriangle(p1, p2, p3, callbackxy, args);
   } else {
     // Cas general n split le triangle en deux triangles plats
     float x1 = p1->x, y1 = p1->y, y2 = p2->y, x3 = p3->x, y3 = p3->y;
     RasterPos intersection = {
         (uint32_t)(x1 + ((y2 - y1) / (y3 - y1)) * (x3 - x1)), (uint32_t)y2};
-    RASTER_DrawFillBottomFlatTriangle(s, p1, p2, &intersection, c);
-    RASTER_DrawFillTopFlatTriangle(s, p2, &intersection, p3, c);
+    RASTER_DrawFillBottomFlatTriangle(p1, p2, &intersection, callbackxy, args);
+    RASTER_DrawFillTopFlatTriangle(p2, &intersection, p3, callbackxy, args);
   }
 }
 
@@ -214,8 +227,10 @@ inline void swap_pos(RasterPos **p1, RasterPos **p2) {
 }
 
 // TODO: optimiser en ecrivant tout d'un bloc
-static void RASTER_DrawHorizontalLine(struct Raster *s, uint32_t x1,
-                                      uint32_t x2, uint32_t y, color c) {
+static void RASTER_DrawHorizontalLine(uint32_t x1, uint32_t x2, uint32_t y,
+                                      void (*callbackxy)(uint32_t, uint32_t,
+                                                         void *),
+                                      void *args) {
   // swap si pas en ordre
   if (x1 > x2) {
     x1 ^= x2;
@@ -224,17 +239,16 @@ static void RASTER_DrawHorizontalLine(struct Raster *s, uint32_t x1,
   }
 
   for (uint32_t i = x1; i <= x2; i++) {
-    RASTER_DrawPixelxy(s, i, y, c);
+    callbackxy(i, y, args);
     // printf("Writing %u %u\n", i, y);
   }
 }
-
 /**
  * http://www.sunshine2k.de/coding/java/TriangleRasterization/TriangleRasterization.html#algo2
  */
-static void RASTER_DrawFillBottomFlatTriangle(struct Raster *s, RasterPos *p1,
-                                              RasterPos *p2, RasterPos *p3,
-                                              color c) {
+static void RASTER_DrawFillBottomFlatTriangle(
+    RasterPos *p1, RasterPos *p2, RasterPos *p3,
+    void (*callbackxy)(uint32_t, uint32_t, void *), void *args) {
 
   float x1 = p1->x, y1 = p1->y, x2 = p2->x, y2 = p2->y, x3 = p3->x, y3 = p3->y;
 
@@ -245,15 +259,17 @@ static void RASTER_DrawFillBottomFlatTriangle(struct Raster *s, RasterPos *p1,
   float curx2 = x1;
 
   for (uint32_t scanlineY = y1; scanlineY <= y2; scanlineY++) {
-    RASTER_DrawHorizontalLine(s, (int)curx1, (int)curx2, scanlineY, c);
+    RASTER_DrawHorizontalLine((int)curx1, (int)curx2, scanlineY, callbackxy,
+                              args);
     curx1 += invslope1;
     curx2 += invslope2;
   }
 }
 
-static void RASTER_DrawFillTopFlatTriangle(struct Raster *s, RasterPos *p1,
-                                           RasterPos *p2, RasterPos *p3,
-                                           color c) {
+static void
+RASTER_DrawFillTopFlatTriangle(RasterPos *p1, RasterPos *p2, RasterPos *p3,
+                               void (*callbackxy)(uint32_t, uint32_t, void *),
+                               void *args) {
 
   float x1 = p1->x, y1 = p1->y, x2 = p2->x, y2 = p2->y, x3 = p3->x, y3 = p3->y;
   float invslope1 = (x3 - x1) / (y3 - y1);
@@ -263,7 +279,8 @@ static void RASTER_DrawFillTopFlatTriangle(struct Raster *s, RasterPos *p1,
   float curx2 = x3;
 
   for (uint32_t scanlineY = y3; scanlineY >= y1; scanlineY--) {
-    RASTER_DrawHorizontalLine(s, (int)curx1, (int)curx2, scanlineY, c);
+    RASTER_DrawHorizontalLine((int)curx1, (int)curx2, scanlineY, callbackxy,
+                              args);
     curx1 -= invslope1;
     curx2 -= invslope2;
   }

@@ -29,6 +29,7 @@
  ******************************************************************************/
 
 static RasterPos projectionVertex(struct Render *rd, const struct Vector *p);
+static Vector projectionVertex3(struct Render *rd, const struct Vector *p);
 
 /*
  * Calcule d'une raie
@@ -176,7 +177,7 @@ extern struct Render *RD_Init(unsigned int xmax, unsigned int ymax) {
 
   // cam
   ret->fov_rad = 1.0;
-  struct Vector cam_pos = {0, 0, 0};
+  struct Vector cam_pos = {100000, 10, 0};
   struct Vector cam_forward = {1, 0, 0};
   struct Vector cam_up = {0, 1, 0};
   RD_SetCam(ret, &cam_pos, &cam_forward, &cam_up);
@@ -234,6 +235,44 @@ extern void RD_DrawWireframe(struct Render *rd) {
   }
 }
 
+void TESTDRAW(uint32_t x, uint32_t y, void *raster) {
+  // printf("%d %d\n", x, y);
+  RASTER_DrawPixelxy(raster, x, y, CL_GREEN);
+}
+
+extern void RD_DrawZbuffTESTFUNC(struct Render *rd) {
+  Mesh *mesh;
+  MeshFace *f;
+  // Wirefram
+  for (unsigned int i_mesh = 0; i_mesh < rd->nb_meshs; i_mesh++) {
+    mesh = rd->meshs[i_mesh];
+    for (unsigned int i_f = 0; i_f < MESH_GetNbFace(mesh); i_f++) {
+      f = MESH_GetFace(mesh, i_f);
+      Vector p1 = projectionVertex3(rd, f->p0);
+      Vector p2 = projectionVertex3(rd, f->p1);
+      Vector p3 = projectionVertex3(rd, f->p2);
+      RasterPos rp1 = {(uint32_t)p1.x, (uint32_t)p1.y};
+      RasterPos rp2 = {(uint32_t)p2.x, (uint32_t)p2.y};
+      RasterPos rp3 = {(uint32_t)p3.x, (uint32_t)p3.y};
+      printf("p:");
+      VECT_Print(f->p0);
+      VECT_Print(&p1);
+      printf("rp1 : %d %d ", rp1.x, rp1.y);
+      printf(" gen ...\n");
+      VECT_Print(f->p1);
+      VECT_Print(&p2);
+      printf("rp1 : %d %d ", rp2.x, rp2.y);
+      printf(" gen ...\n");
+      VECT_Print(f->p2);
+      VECT_Print(&p3);
+      printf("rp1 : %d %d ", rp3.x, rp3.y);
+      printf(" gen ...\n");
+      RASTER_GenerateFillTriangle(&rp1, &rp2, &rp3, TESTDRAW, rd->raster);
+      printf("DONE \n");
+    }
+  }
+}
+
 extern void RD_DrawVertices(struct Render *rd) {
   Mesh *mesh;
   MeshVertex *p;
@@ -284,6 +323,28 @@ static RasterPos projectionVertex(struct Render *rd, const struct Vector *p) {
   static RasterPos ps;
   ps.x = (uint32_t)((nnpx * rd->scalex + 1) * 0.5 * rd->raster->xmax);
   ps.y = (uint32_t)((1 - (nnpy * rd->scaley + 1) * 0.5) * rd->raster->ymax);
+  // printf("ps :[%d, %d]\n", ps.x, ps.y);
+  return ps;
+}
+
+/*
+ * 3D projection
+ * http://www.cse.psu.edu/~rtc12/CSE486/lecture12.pdf
+ */
+static Vector projectionVertex3(struct Render *rd, const struct Vector *p) {
+  static double camx, camy, camz, nnpx, nnpy;
+  // World to camera
+  camx = VECT_DotProduct(&rd->cam_u, p) + rd->tx;
+  camy = VECT_DotProduct(&rd->cam_v, p) + rd->ty;
+  camz = -VECT_DotProduct(&rd->cam_w, p) + rd->tz;
+  // Projection
+  nnpx = (rd->s * camx) / camz;
+  nnpy = (rd->s * camy) / camz;
+  // Rendu
+  static Vector ps;
+  ps.x = ((nnpx * rd->scalex + 1) * 0.5 * rd->raster->xmax);
+  ps.y = ((1 - (nnpy * rd->scaley + 1) * 0.5) * rd->raster->ymax);
+  ps.z = camz;
   // printf("ps :[%d, %d]\n", ps.x, ps.y);
   return ps;
 }
