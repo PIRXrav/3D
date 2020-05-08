@@ -254,21 +254,7 @@ extern void RD_DrawZbuffTESTFUNC(struct Render *rd) {
       RasterPos rp1 = {(uint32_t)p1.x, (uint32_t)p1.y};
       RasterPos rp2 = {(uint32_t)p2.x, (uint32_t)p2.y};
       RasterPos rp3 = {(uint32_t)p3.x, (uint32_t)p3.y};
-      printf("p:");
-      VECT_Print(f->p0);
-      VECT_Print(&p1);
-      printf("rp1 : %d %d ", rp1.x, rp1.y);
-      printf(" gen ...\n");
-      VECT_Print(f->p1);
-      VECT_Print(&p2);
-      printf("rp1 : %d %d ", rp2.x, rp2.y);
-      printf(" gen ...\n");
-      VECT_Print(f->p2);
-      VECT_Print(&p3);
-      printf("rp1 : %d %d ", rp3.x, rp3.y);
-      printf(" gen ...\n");
       RASTER_GenerateFillTriangle(&rp1, &rp2, &rp3, TESTDRAW, rd->raster);
-      printf("DONE \n");
     }
   }
 }
