@@ -20,9 +20,13 @@
  ******************************************************************************/
 
 struct Render {
+
   /*data*/
   unsigned int nb_meshs;
   struct Mesh **meshs; // Tableau de pointeur de mesh
+
+  /* Repere world */
+  struct MeshVertex p0, px, py, pz;
 
   /*Plan*/
   struct Mesh *highlightedMesh;
@@ -63,7 +67,6 @@ struct Render {
  * Initialisation
  */
 struct Render *RD_Init(unsigned int xmax, unsigned int ymax);
-struct Render *RD_InitTetrahedrons(unsigned int xmax, unsigned int ymax);
 
 /* Ajoute une mesh au render, aucune copie n'est faite */
 void RD_AddMesh(struct Render *rd, struct Mesh *m);
@@ -103,5 +106,7 @@ void RD_DrawWireframe(struct Render *rd);
 void RD_DrawVertices(struct Render *rd);
 void RD_DrawAxis(struct Render *rd);
 void RD_DrawFill(struct Render *rd);
+
+void RD_CalcProjectionVertices(struct Render *rd);
 
 #endif /* _RENDER_H_ */

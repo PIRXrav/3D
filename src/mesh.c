@@ -34,9 +34,9 @@
 // Initialisation VERTEX
 extern MeshVertex *MESH_VERT_Set(MeshVertex *v, double x, double y, double z) {
   assert(v);
-  v->x = x;
-  v->y = y;
-  v->z = z;
+  v->world.x = x;
+  v->world.y = y;
+  v->world.z = z;
   return v;
 }
 
@@ -44,7 +44,7 @@ extern MeshVertex *MESH_VERT_Init(double x, double y, double z) {
   return MESH_VERT_Set(malloc(sizeof(MeshVertex)), x, y, z);
 }
 
-extern void MESH_VERT_Print(MeshVertex *v) { VECT_Print(v); }
+extern void MESH_VERT_Print(MeshVertex *v) { VECT_Print(&v->world); }
 /*
  * Set une face
  */
@@ -66,6 +66,7 @@ extern MeshFace *MESH_FACE_Init(MeshVertex *p1, MeshVertex *p2, MeshVertex *p3,
   return MESH_FACE_Set(malloc(sizeof(MeshFace)), p1, p2, p3, c);
 }
 
+// Pour des points dans le même plan
 extern MeshFace **MESH_FACE_FromVertices(MeshVertex **vertices,
                                          unsigned nbVertices, unsigned *nbFaces,
                                          color c) {
@@ -169,39 +170,6 @@ extern void MESH_AddFaces(Mesh *mesh, MeshFace **faces, unsigned nbFaces) {
 extern void MESH_SetName(Mesh *mesh, const char *name) {
   mesh->name = realloc(mesh->name, strlen(name) + 1);
   strcpy(mesh->name, name);
-}
-
-/*
- * Initialise un tetrahedre
- * https://en.wikipedia.org/wiki/Tetrahedron
- */
-extern Mesh *MESH_InitTetrahedron(MeshVertex *origin) {
-  Mesh *p = MESH_Init();
-  MESH_SetName(p, "Tetrahedron");
-
-  MeshVertex *o = MESH_VERT_Init(0, 0, 0);
-  MeshVertex *x = MESH_VERT_Init(1, 0, 0);
-  MeshVertex *y = MESH_VERT_Init(0, 1, 0);
-  MeshVertex *z = MESH_VERT_Init(0, 0, 1);
-
-  VECT_Add(o, o, origin);
-  VECT_Add(x, x, origin);
-  VECT_Add(y, y, origin);
-  VECT_Add(z, z, origin);
-
-  MESH_AddVertex(p, o);
-  MESH_AddVertex(p, x);
-  MESH_AddVertex(p, y);
-  MESH_AddVertex(p, z);
-
-  MESH_AddFace(p, MESH_FACE_Init(o, x, y, CL_rgb(0, 0, 255)));
-  MESH_AddFace(p, MESH_FACE_Init(o, x, z, CL_rgb(0, 255, 0)));
-  MESH_AddFace(p, MESH_FACE_Init(o, y, z, CL_rgb(255, 0, 0)));
-  MESH_AddFace(p, MESH_FACE_Init(x, y, z, CL_DEEPPINK));
-
-  assert(MESH_GetNbFace(p) == 4);
-  assert(MESH_GetNbVertice(p) == 4);
-  return p;
 }
 
 extern void MESH_Print(const Mesh *mesh) {

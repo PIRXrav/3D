@@ -45,12 +45,16 @@ void user_loop(unsigned int cpt) {
   VECT_Sub(&cam_vect, &rd->cam_pos, &barycentre);
   RD_SetCam(rd, &cam_pos, &cam_vect, NULL);
 
+  // Mise a jour des objets
+  RD_CalcProjectionVertices(rd);
+
+  // Rendu
   // RD_DrawRaytracing(rd);
   RD_DrawFill(rd);
   RD_DrawZbuffTESTFUNC(rd);
-  // RD_DrawWireframe(rd);
-  // RD_DrawVertices(rd);
-  // RD_DrawAxis(rd);
+  RD_DrawWireframe(rd);
+  RD_DrawVertices(rd);
+  RD_DrawAxis(rd);
 }
 
 void mainFenetre() {

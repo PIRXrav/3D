@@ -28,8 +28,7 @@
  * Internal function declaration
  ******************************************************************************/
 
-static RasterPos projectionVertex(struct Render *rd, const struct Vector *p);
-static Vector projectionVertex3(struct Render *rd, const struct Vector *p);
+static void calcProjectionVertex3(struct Render *rd, struct MeshVertex *p);
 
 /*
  * Calcule d'une raie
@@ -63,7 +62,8 @@ static bool RD_RayTraceOnMesh(const struct Mesh *mesh,
   hit = false;
   for (unsigned int i_face = 0; i_face < MESH_GetNbFace(mesh); i_face++) {
     mf = MESH_GetFace(mesh, i_face);
-    if (RayIntersectsTriangle(cam_pos, cam_ray, mf->p0, mf->p1, mf->p2, x)) {
+    if (RayIntersectsTriangle(cam_pos, cam_ray, &mf->p0->world, &mf->p1->world,
+                              &mf->p2->world, x)) {
       d = VECT_DistanceSquare(cam_pos, x);
       if (d < *distance) {
         *face = MESH_GetFace(mesh, i_face);
@@ -76,8 +76,8 @@ static bool RD_RayTraceOnMesh(const struct Mesh *mesh,
 }
 
 /*
- * Intersection d'un rayon avec toutes les meshs, on retourne le point, la face
- * et la mesh en collision
+ * Intersection d'un rayon avec toutes les meshs, on retourne le point, la
+ * face et la mesh en collision
  */
 extern bool RD_RayCastOnRD(const struct Render *rd, const struct Vector *ray,
                            struct Vector *x, struct Mesh **mesh,
@@ -172,6 +172,12 @@ extern struct Render *RD_Init(unsigned int xmax, unsigned int ymax) {
   assert(ret->meshs);
   ret->raster = RASTER_Init(xmax, ymax);
 
+  // Repere
+  VECT_Cpy(&ret->p0.world, &VECT_0);
+  VECT_Cpy(&ret->px.world, &VECT_X);
+  VECT_Cpy(&ret->py.world, &VECT_Y);
+  VECT_Cpy(&ret->pz.world, &VECT_Z);
+
   ret->highlightedMesh = NULL;
   ret->highlightedFace = NULL;
 
@@ -207,6 +213,22 @@ void RD_Print(struct Render *rd) {
   }
 }
 
+extern void RD_CalcProjectionVertices(struct Render *rd) {
+  Mesh *mesh;
+  // Vertices
+  for (unsigned int i_mesh = 0; i_mesh < rd->nb_meshs; i_mesh++) {
+    mesh = rd->meshs[i_mesh];
+    for (unsigned int i_v = 0; i_v < MESH_GetNbVertice(mesh); i_v++) {
+      calcProjectionVertex3(rd, MESH_GetVertex(mesh, i_v));
+    }
+  }
+  // Repere
+  calcProjectionVertex3(rd, &rd->p0);
+  calcProjectionVertex3(rd, &rd->px);
+  calcProjectionVertex3(rd, &rd->py);
+  calcProjectionVertex3(rd, &rd->pz);
+}
+
 extern void RD_DrawRaytracing(struct Render *rd) {
   // Raytracing
   static struct Vector ray;
@@ -227,10 +249,8 @@ extern void RD_DrawWireframe(struct Render *rd) {
     mesh = rd->meshs[i_mesh];
     for (unsigned int i_f = 0; i_f < MESH_GetNbFace(mesh); i_f++) {
       f = MESH_GetFace(mesh, i_f);
-      RasterPos p1 = projectionVertex(rd, f->p0);
-      RasterPos p2 = projectionVertex(rd, f->p1);
-      RasterPos p3 = projectionVertex(rd, f->p2);
-      RASTER_DrawTriangle(rd->raster, &p1, &p2, &p3, CL_ORANGE);
+      RASTER_DrawTriangle(rd->raster, &f->p0->screen, &f->p1->screen,
+                          &f->p2->screen, CL_ORANGE);
     }
   }
 }
@@ -249,43 +269,31 @@ extern void RD_DrawZbuffTESTFUNC(struct Render *rd) {
     mesh = rd->meshs[i_mesh];
     for (unsigned int i_f = 0; i_f < MESH_GetNbFace(mesh); i_f++) {
       f = MESH_GetFace(mesh, i_f);
-      Vector p1 = projectionVertex3(rd, f->p0);
-      Vector p2 = projectionVertex3(rd, f->p1);
-      Vector p3 = projectionVertex3(rd, f->p2);
-      RasterPos rp1 = {(uint32_t)p1.x, (uint32_t)p1.y};
-      RasterPos rp2 = {(uint32_t)p2.x, (uint32_t)p2.y};
-      RasterPos rp3 = {(uint32_t)p3.x, (uint32_t)p3.y};
       void *args[2];
       args[0] = rd->raster;
       args[1] = f;
-      RASTER_GenerateFillTriangle(&rp1, &rp2, &rp3, TESTDRAW, args);
+      RASTER_GenerateFillTriangle(&f->p0->screen, &f->p1->screen,
+                                  &f->p2->screen, TESTDRAW, args);
     }
   }
 }
 
 extern void RD_DrawVertices(struct Render *rd) {
   Mesh *mesh;
-  MeshVertex *p;
-  // Vertices
   for (unsigned int i_mesh = 0; i_mesh < rd->nb_meshs; i_mesh++) {
     mesh = rd->meshs[i_mesh];
     for (unsigned int i_v = 0; i_v < MESH_GetNbVertice(mesh); i_v++) {
-      p = MESH_GetVertex(mesh, i_v);
-      RasterPos pc = projectionVertex(rd, p);
-      RASTER_DrawCircle(rd->raster, &pc, 5, CL_PAPAYAWHIP);
+      RASTER_DrawCircle(rd->raster, &MESH_GetVertex(mesh, i_v)->screen, 5,
+                        CL_PAPAYAWHIP);
     }
   }
 }
 
 extern void RD_DrawAxis(struct Render *rd) {
   // Axes
-  RasterPos p0 = projectionVertex(rd, &VECT_0);
-  RasterPos px = projectionVertex(rd, &VECT_X);
-  RasterPos py = projectionVertex(rd, &VECT_Y);
-  RasterPos pz = projectionVertex(rd, &VECT_Z);
-  RASTER_DrawLine(rd->raster, &p0, &px, CL_RED);
-  RASTER_DrawLine(rd->raster, &p0, &py, CL_GREEN);
-  RASTER_DrawLine(rd->raster, &p0, &pz, CL_BLUE);
+  RASTER_DrawLine(rd->raster, &rd->p0.screen, &rd->px.screen, CL_RED);
+  RASTER_DrawLine(rd->raster, &rd->p0.screen, &rd->py.screen, CL_GREEN);
+  RASTER_DrawLine(rd->raster, &rd->p0.screen, &rd->pz.screen, CL_BLUE);
 }
 
 extern void RD_DrawFill(struct Render *rd) {
@@ -300,41 +308,21 @@ extern void RD_DrawFill(struct Render *rd) {
  * 3D projection
  * http://www.cse.psu.edu/~rtc12/CSE486/lecture12.pdf
  */
-static RasterPos projectionVertex(struct Render *rd, const struct Vector *p) {
-  static double camx, camy, camz, nnpx, nnpy;
+static void calcProjectionVertex3(struct Render *rd, struct MeshVertex *p) {
+  static double nnpx, nnpy;
   // World to camera
-  camx = VECT_DotProduct(&rd->cam_u, p) + rd->tx;
-  camy = VECT_DotProduct(&rd->cam_v, p) + rd->ty;
-  camz = -VECT_DotProduct(&rd->cam_w, p) + rd->tz;
+  p->cam.x = VECT_DotProduct(&rd->cam_u, &p->world) + rd->tx;
+  p->cam.y = VECT_DotProduct(&rd->cam_v, &p->world) + rd->ty;
+  p->cam.z = -VECT_DotProduct(&rd->cam_w, &p->world) + rd->tz;
   // Projection
-  nnpx = (rd->s * camx) / camz;
-  nnpy = (rd->s * camy) / camz;
+  nnpx = (rd->s * p->cam.x) / p->cam.z;
+  nnpy = (rd->s * p->cam.y) / p->cam.z;
   // Rendu
-  static RasterPos ps;
-  ps.x = (uint32_t)((nnpx * rd->scalex + 1) * 0.5 * rd->raster->xmax);
-  ps.y = (uint32_t)((1 - (nnpy * rd->scaley + 1) * 0.5) * rd->raster->ymax);
+  p->sc.x = ((nnpx * rd->scalex + 1) * 0.5 * rd->raster->xmax);
+  p->sc.y = ((1 - (nnpy * rd->scaley + 1) * 0.5) * rd->raster->ymax);
+  p->sc.z = p->cam.z;
+  //
+  p->screen.x = (int32_t)p->sc.x;
+  p->screen.y = (int32_t)p->sc.y;
   // printf("ps :[%d, %d]\n", ps.x, ps.y);
-  return ps;
-}
-
-/*
- * 3D projection
- * http://www.cse.psu.edu/~rtc12/CSE486/lecture12.pdf
- */
-static Vector projectionVertex3(struct Render *rd, const struct Vector *p) {
-  static double camx, camy, camz, nnpx, nnpy;
-  // World to camera
-  camx = VECT_DotProduct(&rd->cam_u, p) + rd->tx;
-  camy = VECT_DotProduct(&rd->cam_v, p) + rd->ty;
-  camz = -VECT_DotProduct(&rd->cam_w, p) + rd->tz;
-  // Projection
-  nnpx = (rd->s * camx) / camz;
-  nnpy = (rd->s * camy) / camz;
-  // Rendu
-  static Vector ps;
-  ps.x = ((nnpx * rd->scalex + 1) * 0.5 * rd->raster->xmax);
-  ps.y = ((1 - (nnpy * rd->scaley + 1) * 0.5) * rd->raster->ymax);
-  ps.z = camz;
-  // printf("ps :[%d, %d]\n", ps.x, ps.y);
-  return ps;
 }

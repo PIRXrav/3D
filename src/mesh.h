@@ -8,6 +8,7 @@
 #include "color.h"
 #include "containers/arraylist.h"
 #include "geo.h"
+#include "raster.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -20,7 +21,13 @@
  * Types
  ******************************************************************************/
 
-typedef struct Vector MeshVertex;
+typedef struct MeshVertex MeshVertex;
+struct MeshVertex {
+  Vector world;     // Coordonnées dans le monde
+  Vector cam;       // Coordonnées repere camera
+  Vector sc;        // Coordonnées dans l'écran 3
+  RasterPos screen; // Dans ecran 2
+};
 
 typedef struct MeshFace MeshFace;
 struct MeshFace {
