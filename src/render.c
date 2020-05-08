@@ -256,8 +256,54 @@ extern void RD_DrawWireframe(struct Render *rd) {
 }
 
 void TESTDRAW(uint32_t x, uint32_t y, void **args) {
-  // printf("%d %d\n", x, y);
-  RASTER_DrawPixelxy(args[0], x, y, CL_GREEN);
+
+  Vector *p1 = &((struct MeshFace *)args[1])->p0->sc;
+  Vector *p2 = &((struct MeshFace *)args[1])->p1->sc;
+  Vector *p3 = &((struct MeshFace *)args[1])->p2->sc;
+
+  p1->x = (double)(int)(p1->x);
+  p1->y = (double)(int)(p1->y);
+
+  p2->x = (double)(int)(p2->x);
+  p2->y = (double)(int)(p2->y);
+
+  p3->x = (double)(int)(p3->x);
+  p3->y = (double)(int)(p3->y);
+
+  // TODO : OPTIMISATION !
+
+  // Normal du plan
+
+  double xn =
+      (p2->y - p1->y) * (p3->z - p1->z) - (p3->y - p1->y) * (p2->z - p1->z);
+  double yn =
+      (p3->x - p1->x) * (p2->z - p1->z) - (p2->x - p1->x) * (p3->z - p1->z);
+  double zn =
+      (p2->x - p1->x) * (p3->y - p1->y) - (p3->x - p1->x) * (p2->y - p1->y);
+  double z4 = (p1->x * xn + p1->y * yn + p1->z * zn - x * xn - y * yn) / zn;
+
+  if (fabs(zn) <= 0.01) {
+    return;
+    RASTER_DrawPixelxy(args[0], x, y, CL_YELLOW);
+    return;
+  }
+
+  double seuil = 2500;
+  // printf("%f\n", z4);
+  if (z4 >= seuil) {
+    return;
+    RASTER_DrawPixelxy(args[0], x, y, CL_PURPLE);
+    return;
+  }
+  if (z4 < 1000) {
+    return;
+    RASTER_DrawPixelxy(args[0], x, y, CL_BLUE);
+    return;
+  }
+
+  if (RASTER_GetPixelxy(args[0], x, y).rgb.r <
+      CL_Mix(CL_RED, CL_BLACK, z4 / seuil).rgb.r)
+    RASTER_DrawPixelxy(args[0], x, y, CL_Mix(CL_WHITE, CL_BLACK, z4 / seuil));
   // printf("%f", ((struct MeshFace *)args[1])->p0->x);
 }
 

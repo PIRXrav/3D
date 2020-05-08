@@ -84,13 +84,15 @@ extern void RASTER_DrawPixelxy(struct Raster *s, uint32_t x, uint32_t y,
 }
 
 extern color RASTER_GetPixel(struct Raster *s, RasterPos p) {
-  assert(p.x < s->xmax && p.y < s->ymax);
-  return s->screen[p.y * s->xmax + p.x];
+  if (p.x < s->xmax && p.y < s->ymax)
+    return s->screen[p.y * s->xmax + p.x];
+  return CL_BLACK;
 }
 
 extern color RASTER_GetPixelxy(struct Raster *s, uint32_t x, uint32_t y) {
-  assert(x < s->xmax && y < s->ymax);
-  return s->screen[y * s->xmax + x];
+  if (x < s->xmax && y < s->ymax)
+    return s->screen[y * s->xmax + x];
+  return CL_BLACK;
 }
 
 /*
