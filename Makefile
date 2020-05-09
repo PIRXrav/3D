@@ -13,10 +13,10 @@ all: $(DIRS) $(EXEC)
 
 
 $(EXEC): $(OBJ)
-	$(CC) -o $@ $^ $(LDFLAGS)
+	$(CC) -o $@ $^ $(LDFLAGS) $(EXTRA_LFLAGS)
 
 obj/%.o: src/%.c
-	$(CC) $(CFLAGS) -c $^ -o $@
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c $^ -o $@
 
 
 tests: $(DIRS) $(TEST_BINS)
@@ -27,10 +27,10 @@ tests: $(DIRS) $(TEST_BINS)
 	done
 
 bin/tests/%: obj/tests/%.o $(filter-out obj/main.o,$(OBJ))
-	$(CC) -o $@ $^ $(LDFLAGS)
+	$(CC) -o $@ $^ $(LDFLAGS) $(EXTRA_LFLAGS)
 
 obj/tests/%.o: tests/%.c
-	$(CC) $(CFLAGS) -c $^ -o $@
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c $^ -o $@
 
 
 $(DIRS): %:
@@ -59,6 +59,13 @@ asset_venus:
 	wget http://graphics.im.ntu.edu.tw/~robin/courses/gm05/model/venusv.obj.gz -O /tmp/xxx.obj.gz;
 	gunzip /tmp/xxx.obj.gz
 	mv /tmp/xxx.obj  data/extern/venus.obj
+
+profile: EXTRA_CFLAGS=-pg
+profile: EXTRA_LFLAGS=-pg
+profile: clean all
+	bin/main
+	@echo -e "\n\nPROFILE\n\n"
+	gprof bin/main
 
 clean:
 	rm -rf obj/
