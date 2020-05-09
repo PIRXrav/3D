@@ -120,6 +120,7 @@ extern void RD_DrawFbufferWithLum(struct Render *rd, struct Vector *lv,
 
 void RD_CalcProjectionVertices(struct Render *rd);
 void RD_CalcNormales(struct Render *rd);
+void RD_calcCacheBarycentres(struct Render *rd);
 
 void RD_RenderRaster(struct Render *rd);
 

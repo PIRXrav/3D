@@ -8,7 +8,7 @@ OBJ=$(patsubst src/%.c,obj/%.o,$(SRC))
 DIRS=$(patsubst src/%,obj/%,$(shell find src/ -type d)) bin/tests obj/tests
 TESTS=$(wildcard tests/*.c)
 TEST_BINS=$(patsubst tests/%.c,bin/tests/%,$(TESTS))
-DISPLAY_IMAGE=$(shell which tycat 2> /dev/null||which viewnior 2>/dev/null || which eog 2>/dev/null || which display 2>/dev/null || which feh 2>/dev/null)
+DISPLAY_IMAGE=$(shell which viewnior 2>/dev/null || which eog 2>/dev/null || which feh 2>/dev/null || which display 2>/dev/null ||  which tycat 2> /dev/null)
 
 all: $(DIRS) $(EXEC)
 
@@ -71,7 +71,7 @@ graphs:
 
 profile: EXTRA_CFLAGS=-pg
 profile: EXTRA_LFLAGS=-pg
-profile: scripts/gprof2dot.py clean all
+profile: scripts/gprof2dot.py graphs clean all
 	bin/main
 	echo -e "\n\n"
 	gprof bin/main | scripts/gprof2dot.py | dot -Tpng -o graphs/profile-graph.png

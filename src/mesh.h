@@ -35,6 +35,10 @@ struct MeshFace {
   MeshVertex *p0, *p1, *p2; // Uniquement des triangles
   color color;              // Couleur du triangle
   Vector normal;            // Normale du triangle
+  double wp1;               // Cache des sous barycentres
+  double wp2;
+  double wp3;
+  double wp4;
 };
 
 typedef struct MeshEdge MeshEdge;
