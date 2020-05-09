@@ -110,4 +110,6 @@ void RD_DrawFill(struct Render *rd);
 
 void RD_CalcProjectionVertices(struct Render *rd);
 
+void RD_RenderRaster(struct Render *rd);
+
 #endif /* _RENDER_H_ */
