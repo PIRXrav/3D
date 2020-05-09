@@ -275,7 +275,7 @@ RASTER_DrawFillTopFlatTriangle(RasterPos *p1, RasterPos *p2, RasterPos *p3,
   float curx1 = x3;
   float curx2 = x3;
 
-  for (uint32_t scanlineY = y3; scanlineY >= y1; scanlineY--) {
+  for (int32_t scanlineY = y3; scanlineY >= y1; scanlineY--) {
     RASTER_DrawHorizontalLine((int)curx1, (int)curx2, scanlineY, callbackxy,
                               args);
     curx1 -= invslope1;

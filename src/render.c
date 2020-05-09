@@ -383,8 +383,8 @@ static int computePlaneSegmentIntersection(const Vector segment[2],
 
   double t = numerateur / denominateur;
 
-  // Si pas sur le segment t > 1 ou t < -1
-  if (fabs(t) > 1)
+  // Si 0 <= t <= 1, on est sur le segment
+  if (t < 0 || t > 1)
     return 0;
 
   VECT_MultSca(&ab, &ab, t);
@@ -465,10 +465,21 @@ static void RD_DrawFace(struct Render *rd, const MeshFace *face) {
   for (unsigned cf = 0; cf < 6; cf++) {
     ArrayList *newFace = ARRLIST_Create(sizeof(Vector));
 
-    const Vector *facePoint = cube[cf][0];
-    Vector vectDirecteurFace;
-    VECT_Sub(&vectDirecteurFace, facePoint, &cubeInsidePoint);
+    Vector facePoint = {0, 0, 0};
+    for (unsigned i = 0; i < 4; i++)
+      VECT_Add(&facePoint, &facePoint, cube[cf][i]);
+    VECT_MultSca(&facePoint, &facePoint, .25);
 
+    Vector vectDirecteurFace, vectFace1, vectFace2;
+    VECT_Sub(&vectFace1, cube[cf][1], cube[cf][0]);
+    VECT_Sub(&vectFace2, cube[cf][2], cube[cf][0]);
+    VECT_CrossProduct(&vectDirecteurFace, &vectFace1, &vectFace2);
+
+    Vector vectInside;
+    VECT_Sub(&vectInside, &cubeInsidePoint, &facePoint);
+    double faceDotProduct = VECT_DotProduct(&vectDirecteurFace, &vectInside);
+
+    printf("%d\n", cf);
     for (unsigned p = 0; p < ARRLIST_GetSize(facePoints); p++) {
       Vector *currentPoint = ARRLIST_Get(facePoints, p);
 
@@ -483,9 +494,10 @@ static void RD_DrawFace(struct Render *rd, const MeshFace *face) {
           computePlaneSegmentIntersection(segment, cube[cf], &intersection);
 
       Vector vectCurrent;
-      VECT_Sub(&vectCurrent, currentPoint, facePoint);
+      VECT_Sub(&vectCurrent, currentPoint, &facePoint);
 
-      if (VECT_DotProduct(&vectDirecteurFace, &vectCurrent) <= 0) {
+      if (VECT_DotProduct(&vectDirecteurFace, &vectCurrent) * faceDotProduct >=
+          0) {
         ARRLIST_Add(newFace, currentPoint);
       }
       if (hasIntersection) {
