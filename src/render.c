@@ -19,6 +19,8 @@
 /*******************************************************************************
  * Macros
  ******************************************************************************/
+// D'apres nos savants calculs
+#define MAX_VERTICES_AFTER_CLIP 7
 
 /*******************************************************************************
  * Types
@@ -574,129 +576,102 @@ static void RD_ClipAndRasterFace(struct Render *rd, const MeshFace *face,
    *    face = newFace;
    * }
    */
-  double near = 0.01, far = 100000;
-  // Sommets du cube face avant, face arriere, on commence en haut a gauche,
-  // sens trigo
-  Vector cubeVertices[8] = {{0, 0, 0}, {0, 1, 0}, {1, 1, 0}, {1, 0, 0},
-                            {0, 0, 1}, {0, 1, 1}, {1, 1, 1}, {1, 0, 1}};
+  static const double NEAR = 0.01, FAR = 100000;
+  // Sommets du projectionCube face avant, face arriere, on commence en haut a
+  // gauche, sens trigo
+  static Vector projectionCubeVertices[8] = {
+      {0, 0, NEAR}, {0, 1, NEAR}, {1, 1, NEAR}, {1, 0, NEAR},
+      {0, 0, FAR},  {0, 1, FAR},  {1, 1, FAR},  {1, 0, FAR}};
 
-  for (unsigned i = 0; i < 8; i++) {
-    cubeVertices[i].x *= rd->raster->xmax - 1;
-    cubeVertices[i].y *= rd->raster->ymax - 1;
-    cubeVertices[i].z = (i < 4 ? near : far);
+  for (unsigned i = 0; i < 8; i += 4) {
+    projectionCubeVertices[i + 1].y = rd->raster->ymax - 1;
+
+    projectionCubeVertices[i + 2].x = rd->raster->xmax - 1;
+    projectionCubeVertices[i + 2].y = rd->raster->ymax - 1;
+
+    projectionCubeVertices[i + 3].x = rd->raster->xmax - 1;
   }
 
-  // Cube de projection (seuls les 3 premiers sommets sont utilises mais
-  // pour etre plus clair on met tout, ca coute rien)
-  const Vector *cube[6][4] = {
-      {cubeVertices, cubeVertices + 1, cubeVertices + 2,
-       cubeVertices + 3}, // Face devant
-      {cubeVertices + 3, cubeVertices + 2, cubeVertices + 6,
-       cubeVertices + 7}, // Face droite
-      {cubeVertices + 7, cubeVertices + 4, cubeVertices + 5,
-       cubeVertices + 6}, // Face arriere
-      {cubeVertices + 4, cubeVertices + 5, cubeVertices + 1,
-       cubeVertices}, // Face gauche
-      {cubeVertices + 4, cubeVertices, cubeVertices + 3,
-       cubeVertices + 7}, // Face dessus
-      {cubeVertices + 5, cubeVertices + 1, cubeVertices + 2,
-       cubeVertices + 6} // Face dessous
+  // projectionCube de projection (seuls les 3 premiers sommets sont utilises
+  // mais pour etre plus clair on met tout, ca coute rien)
+  static const Vector *projectionCube[6][4] = {
+      {projectionCubeVertices, projectionCubeVertices + 1,
+       projectionCubeVertices + 2, projectionCubeVertices + 3}, // Face devant
+      {projectionCubeVertices + 3, projectionCubeVertices + 2,
+       projectionCubeVertices + 6, projectionCubeVertices + 7}, // Face droite
+      {projectionCubeVertices + 7, projectionCubeVertices + 4,
+       projectionCubeVertices + 5, projectionCubeVertices + 6}, // Face arriere
+      {projectionCubeVertices + 4, projectionCubeVertices + 5,
+       projectionCubeVertices + 1, projectionCubeVertices}, // Face gauche
+      {projectionCubeVertices + 4, projectionCubeVertices,
+       projectionCubeVertices + 3, projectionCubeVertices + 7}, // Face dessus
+      {projectionCubeVertices + 5, projectionCubeVertices + 1,
+       projectionCubeVertices + 2, projectionCubeVertices + 6} // Face dessous
   };
+  static const Vector vecteursNormaux[6] = {{0, 0, -1}, {1, 0, 0},  {0, 0, 1},
+                                            {-1, 0, 0}, {0, -1, 0}, {0, 1, 0}};
 
-  static Vector cubeInsidePoint;
-  VECT_Set(&cubeInsidePoint, rd->raster->xmax / 2, rd->raster->ymax / 2,
-           far / 2);
+  static Vector facePointsBuff[MAX_VERTICES_AFTER_CLIP];
+  Vector *facePoints = facePointsBuff;
+  unsigned facePointsNb = 3;
+  facePoints[0] = face->p0->sc;
+  facePoints[1] = face->p1->sc;
+  facePoints[2] = face->p2->sc;
 
-  ArrayList *facePoints = ARRLIST_Create(sizeof(Vector));
-  ARRLIST_Add(facePoints, &face->p0->sc);
-  ARRLIST_Add(facePoints, &face->p1->sc);
-  ARRLIST_Add(facePoints, &face->p2->sc);
+  static Vector newFacePointsBuff[MAX_VERTICES_AFTER_CLIP];
+  Vector *newFacePoints = newFacePointsBuff;
+  unsigned newFacePointsNb = 0;
 
   for (unsigned cf = 0; cf < 6; cf++) {
-    ArrayList *newFace = ARRLIST_Create(sizeof(Vector));
+    newFacePointsNb = 0;
 
-    Vector facePoint = {0, 0, 0};
-    for (unsigned i = 0; i < 4; i++)
-      VECT_Add(&facePoint, &facePoint, cube[cf][i]);
-    VECT_MultSca(&facePoint, &facePoint, .25);
-
-    Vector vectDirecteurFace, vectFace1, vectFace2;
-    VECT_Sub(&vectFace1, cube[cf][1], cube[cf][0]);
-    VECT_Sub(&vectFace2, cube[cf][2], cube[cf][0]);
-    VECT_CrossProduct(&vectDirecteurFace, &vectFace1, &vectFace2);
-
-    Vector vectInside;
-    VECT_Sub(&vectInside, &cubeInsidePoint, &facePoint);
-    double faceDotProduct = VECT_DotProduct(&vectDirecteurFace, &vectInside);
-
-    for (unsigned p = 0; p < ARRLIST_GetSize(facePoints); p++) {
-      Vector *currentPoint = ARRLIST_Get(facePoints, p);
-
-      Vector *prevPoint =
-          ARRLIST_Get(facePoints, (p + ARRLIST_GetSize(facePoints) - 1) %
-                                      ARRLIST_GetSize(facePoints));
+    for (unsigned p = 0; p < facePointsNb; p++) {
+      Vector *currentPoint = &facePoints[p];
+      Vector *prevPoint = &facePoints[(p + facePointsNb - 1) % facePointsNb];
 
       Vector segment[2] = {*prevPoint, *currentPoint};
       Vector intersection;
 
-      int hasIntersection =
-          computePlaneSegmentIntersection(segment, cube[cf], &intersection);
+      int hasIntersection = computePlaneSegmentIntersection(
+          segment, projectionCube[cf], &intersection);
 
-      Vector vectCurrent;
-      VECT_Sub(&vectCurrent, prevPoint, &facePoint);
+      Vector vectPrev;
+      VECT_Sub(&vectPrev, prevPoint, projectionCube[cf][0]);
 
-      /* printf("Current Point : ");
-       VECT_Print(currentPoint);
-       printf(", ");
-
-       printf("Prev Point : ");
-       VECT_Print(prevPoint);
-       printf("\n");*/
-
-      if (VECT_DotProduct(&vectDirecteurFace, &vectCurrent) * faceDotProduct >=
-          0) {
-        // printf("Accepted current point !\n");
-        ARRLIST_Add(newFace, prevPoint);
+      if (VECT_DotProduct(&vecteursNormaux[cf], &vectPrev) <= 0) {
+        newFacePoints[newFacePointsNb++] = *prevPoint;
       }
       if (hasIntersection) {
-        /*    printf("Intersection : ");
-            VECT_Print(&intersection);
-            printf("\n");*/
-        /*printf("Face : ");
-        for (unsigned k = 0; k < 4; k++) {
-          printf("P%u : ", k);
-          VECT_Print(cube[cf][k]);
-          printf(", ");
-        }
-        printf("\n");*/
-        ARRLIST_Add(newFace, &intersection);
+        newFacePoints[newFacePointsNb++] = intersection;
       }
     }
-    // getc(stdin);
 
-    ARRLIST_Free(facePoints);
-    facePoints = newFace;
-    if (ARRLIST_GetSize(facePoints) == 0)
+    void *tmp = facePoints;
+    facePoints = newFacePoints;
+    newFacePoints = tmp;
+
+    facePointsNb = newFacePointsNb;
+    newFacePointsNb = 0;
+
+    if (!facePointsNb)
       break;
   }
 
   // Apres triangulation (comme on la fait ici), on aura nbSommets - 2 faces
-  int nbFaces = ARRLIST_GetSize(facePoints) - 2;
+  int nbFaces = facePointsNb - 2;
   // S'il n'y a que deux sommets on ne dessine rien
   if (nbFaces <= 0)
     return;
 
-  // On triangule la face puis on rasterise 'on the fly' comme Pierre aime a le
-  // dire
-  for (unsigned i = 0; i < nbFaces; i++) {
-    Vector *p0 = ARRLIST_Get(facePoints, 0);
-    Vector *p1 = ARRLIST_Get(facePoints, i + 1);
-    Vector *p2 = ARRLIST_Get(facePoints, i + 2);
+  // On triangule la face puis on rasterise 'on the fly' comme Pierre aime a
+  // le dire
+  for (int i = 0; i < nbFaces; i++) {
+    Vector *p0 = &facePoints[0];
+    Vector *p1 = &facePoints[i + 1];
+    Vector *p2 = &facePoints[i + 2];
     RasterPos a = {p0->x, p0->y}, b = {p1->x, p1->y}, c = {p2->x, p2->y};
     RASTER_GenerateFillTriangle(&a, &b, &c, callback, args);
   }
-
-  ARRLIST_Free(facePoints);
 }
 
 /*
