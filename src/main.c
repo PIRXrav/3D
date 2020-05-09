@@ -27,6 +27,10 @@ void mouse_event(const struct event *event) {
     rd->highlightedMesh = mesh;
     rd->highlightedFace = face;
   }
+
+  if (event->data.mouse.wheel != 0) {
+    camDistFactor *= 1 - event->data.mouse.wheel / 15.;
+  }
 }
 
 void key_event(const struct event *event) {
