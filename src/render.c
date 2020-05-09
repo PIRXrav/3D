@@ -624,7 +624,6 @@ static void RD_ClipAndRasterFace(struct Render *rd, const MeshFace *face,
     VECT_Sub(&vectInside, &cubeInsidePoint, &facePoint);
     double faceDotProduct = VECT_DotProduct(&vectDirecteurFace, &vectInside);
 
-    // printf("%d\n", cf);
     for (unsigned p = 0; p < ARRLIST_GetSize(facePoints); p++) {
       Vector *currentPoint = ARRLIST_Get(facePoints, p);
 
@@ -676,40 +675,23 @@ static void RD_ClipAndRasterFace(struct Render *rd, const MeshFace *face,
       break;
   }
 
-  ArrayList *vertices = ARRLIST_Create(sizeof(MeshVertex *));
-  for (unsigned i = 0; i < ARRLIST_GetSize(facePoints); i++) {
-    Vector p = *(Vector *)ARRLIST_Get(facePoints, i);
-    MeshVertex *a = MESH_VERT_Init(p.x, p.y, p.z);
-    ARRLIST_Add(vertices, &a);
+  // Apres triangulation (comme on la fait ici), on aura nbSommets - 2 faces
+  int nbFaces = ARRLIST_GetSize(facePoints) - 2;
+  // S'il n'y a que deux sommets on ne dessine rien
+  if (nbFaces <= 0)
+    return;
 
-    // VECT_Print(&p);
-    // printf(" || ");
-  }
-  // printf("\n");
-  ARRLIST_Free(facePoints);
-
-  unsigned nbFaces = 0;
-  MeshFace **faces =
-      MESH_FACE_FromVertices(ARRLIST_GetData(vertices),
-                             ARRLIST_GetSize(vertices), &nbFaces, face->color);
-
-  // printf("%u\n", nbFaces);
+  // On triangule la face puis on rasterise 'on the fly' comme Pierre aime a le
+  // dire
   for (unsigned i = 0; i < nbFaces; i++) {
-    MeshFace *face = faces[i];
-
-    RasterPos a = {face->p0->world.x, face->p0->world.y},
-              b = {face->p1->world.x, face->p1->world.y},
-              c = {face->p2->world.x, face->p2->world.y};
-    // printf("(%u, %u) (%u, %u), (%u, %u) ; ", a.x, a.y, b.x, b.y, c.x, c.y);
+    Vector *p0 = ARRLIST_Get(facePoints, 0);
+    Vector *p1 = ARRLIST_Get(facePoints, i + 1);
+    Vector *p2 = ARRLIST_Get(facePoints, i + 2);
+    RasterPos a = {p0->x, p0->y}, b = {p1->x, p1->y}, c = {p2->x, p2->y};
     RASTER_GenerateFillTriangle(&a, &b, &c, callback, args);
   }
-  // printf("\n");
-  for (unsigned i = 0; i < ARRLIST_GetSize(vertices); i++)
-    free(*(MeshVertex **)ARRLIST_Get(vertices, i));
-  ARRLIST_Free(vertices);
-  for (unsigned i = 0; i < nbFaces; i++)
-    free(faces[i]);
-  free(faces);
+
+  ARRLIST_Free(facePoints);
 }
 
 /*
