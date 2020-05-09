@@ -29,6 +29,7 @@
  ******************************************************************************/
 
 static void calcProjectionVertex3(struct Render *rd, struct MeshVertex *p);
+static void calcNormaleFace(struct MeshFace *f);
 
 /*
  * Calcule d'une raie
@@ -239,6 +240,17 @@ extern void RD_CalcProjectionVertices(struct Render *rd) {
   calcProjectionVertex3(rd, &rd->pz);
 }
 
+extern void RD_CalcNormales(struct Render *rd) {
+  Mesh *mesh;
+  // Vertices
+  for (unsigned int i_mesh = 0; i_mesh < rd->nb_meshs; i_mesh++) {
+    mesh = rd->meshs[i_mesh];
+    for (unsigned int i = 0; i < MESH_GetNbFace(mesh); i++) {
+      calcNormaleFace(MESH_GetFace(mesh, i));
+    }
+  }
+}
+
 extern void RD_DrawRaytracing(struct Render *rd) {
   // Raytracing
   static struct Vector ray;
@@ -265,38 +277,7 @@ extern void RD_DrawWireframe(struct Render *rd) {
   }
 }
 
-int isDoubleGreater(void *a, void *b) {
-  double aa = *(double *)a;
-  double bb = *(double *)b;
-  return aa < bb;
-}
-
-int isDoubleLower(void *a, void *b) {
-  double aa = *(double *)a;
-  double bb = *(double *)b;
-  if (bb < 0)
-    return 0;
-  if (aa < 0)
-    return 1;
-  return bb < aa;
-}
-
-void RD_DrawZbuffer(struct Render *rd) {
-  double maxz = *(double *)MATRIX_Max(rd->zbuffer, isDoubleGreater);
-  double minz = *(double *)MATRIX_Max(rd->zbuffer, isDoubleLower);
-  // printf("maxz : %f, minz : %f\n", maxz, minz);
-  for (size_t x = 0; x < rd->raster->xmax; x++) {
-    for (size_t y = 0; y < rd->raster->ymax; y++) {
-      double z = *(double *)MATRIX_Edit(rd->zbuffer, x, y);
-      if (z >= 0) {
-        double coef = (z - minz) / (maxz - minz);
-        RASTER_DrawPixelxy(rd->raster, x, y, CL_Mix(CL_WHITE, CL_BLACK, coef));
-      }
-    }
-  }
-}
 /*
- *
  * https://codeplea.com/triangular-interpolation?fbclid=IwAR38TFpipmfuQ5bM2P0Y07eym1ZHlt7-ZlcZAnEIb7EeOYU3uJzqWxuK0Ws
  */
 void callbackWriteZbuffer(uint32_t x, uint32_t y, void **args) {
@@ -409,7 +390,7 @@ extern void RD_DrawVertices(struct Render *rd) {
     mesh = rd->meshs[i_mesh];
     for (unsigned int i_v = 0; i_v < MESH_GetNbVertice(mesh); i_v++) {
       RASTER_DrawCircle(rd->raster, &MESH_GetVertex(mesh, i_v)->screen, 5,
-                        CL_PAPAYAWHIP);
+                        CL_GREEN);
     }
   }
 }
@@ -425,6 +406,50 @@ extern void RD_DrawFill(struct Render *rd) {
   RASTER_DrawFill(rd->raster, (color)0xFF000000); // Alpha
 }
 
+int isDoubleGreater(void *a, void *b) {
+  double aa = *(double *)a;
+  double bb = *(double *)b;
+  return aa < bb;
+}
+int isDoubleLower(void *a, void *b) {
+  double aa = *(double *)a;
+  double bb = *(double *)b;
+  if (bb < 0)
+    return 0;
+  if (aa < 0)
+    return 1;
+  return bb < aa;
+}
+extern void RD_DrawZbuffer(struct Render *rd) {
+  double maxz = *(double *)MATRIX_Max(rd->zbuffer, isDoubleGreater);
+  double minz = *(double *)MATRIX_Max(rd->zbuffer, isDoubleLower);
+  // printf("maxz : %f, minz : %f\n", maxz, minz);
+  for (size_t x = 0; x < rd->raster->xmax; x++) {
+    for (size_t y = 0; y < rd->raster->ymax; y++) {
+      double z = *(double *)MATRIX_Edit(rd->zbuffer, x, y);
+      if (z >= 0) {
+        double coef = (z - minz) / (maxz - minz);
+        RASTER_DrawPixelxy(rd->raster, x, y, CL_Mix(CL_WHITE, CL_BLACK, coef));
+      }
+    }
+  }
+}
+
+extern void RD_DrawNormales(struct Render *rd) {
+  Mesh *mesh;
+  MeshVertex b0, b1;
+  for (unsigned int i_mesh = 0; i_mesh < rd->nb_meshs; i_mesh++) {
+    mesh = rd->meshs[i_mesh];
+    for (unsigned int i = 0; i < MESH_GetNbFace(mesh); i++) {
+      MeshFace *f = MESH_GetFace(mesh, i);
+      b1.world.x = f->p0->world.x + f->normal.x;
+      b1.world.y = f->p0->world.y + f->normal.y;
+      b1.world.z = f->p0->world.z + f->normal.z;
+      calcProjectionVertex3(rd, &b1);
+      RASTER_DrawLine(rd->raster, &f->p0->screen, &b1.screen, CL_BLUE);
+    }
+  }
+}
 /*******************************************************************************
  * Internal function
  ******************************************************************************/
@@ -450,4 +475,12 @@ static void calcProjectionVertex3(struct Render *rd, struct MeshVertex *p) {
   p->screen.x = (int32_t)p->sc.x;
   p->screen.y = (int32_t)p->sc.y;
   // printf("ps :[%d, %d]\n", ps.x, ps.y);
+}
+
+static void calcNormaleFace(struct MeshFace *f) {
+  Vector s21, s31;
+  VECT_Sub(&s21, &f->p1->world, &f->p0->world);
+  VECT_Sub(&s31, &f->p2->world, &f->p0->world);
+  VECT_CrossProduct(&f->normal, &s21, &s31);
+  VECT_Normalise(&f->normal);
 }

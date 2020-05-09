@@ -51,6 +51,7 @@ void user_loop(unsigned int cpt) {
   // Mise a jour des objets
   RD_CalcProjectionVertices(rd); // Calcul des projections
   RD_CalcZbuffer(rd);            // Calcul du Z buffer
+  RD_CalcNormales(rd);
 
   // Rendu
   // RD_DrawRaytracing(rd);
@@ -58,6 +59,7 @@ void user_loop(unsigned int cpt) {
   RD_DrawZbuffer(rd);
   // RD_DrawWireframe(rd);
   // RD_DrawVertices(rd);
+  // RD_DrawNormales(rd);
   RD_DrawAxis(rd);
 
   // Filtres vidéo

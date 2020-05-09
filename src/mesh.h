@@ -33,7 +33,8 @@ struct MeshVertex {
 typedef struct MeshFace MeshFace;
 struct MeshFace {
   MeshVertex *p0, *p1, *p2; // Uniquement des triangles
-  color color;
+  color color;              // Couleur du triangle
+  Vector normal;            // Normale du triangle
 };
 
 typedef struct MeshEdge MeshEdge;
