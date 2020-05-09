@@ -76,7 +76,7 @@ float VECT_Distance(const struct Vector *a, const struct Vector *b);
 /*
  * Affichage vecteur
  */
-void VECT_Print(struct Vector *a);
+void VECT_Print(const struct Vector *a);
 /*
  * Somme vecteur : a := a + b
  */
