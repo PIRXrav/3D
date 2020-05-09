@@ -31,7 +31,7 @@ void mouse_event(const struct event *event) {
 void user_loop(unsigned int cpt) {
   static double angle = 7.1;
   struct Vector *barycentre = &rd->meshs[0]->box.center;
-  double d = 1.2 * sqrt(VECT_DistanceSquare(&rd->meshs[0]->box.min,
+  double d = 0.5 * sqrt(VECT_DistanceSquare(&rd->meshs[0]->box.min,
                                             &rd->meshs[0]->box.max));
 
   static struct Vector cam_vect;
@@ -61,7 +61,7 @@ void user_loop(unsigned int cpt) {
   RD_DrawAxis(rd);
 
   // Filtres vidéo
-  RASTER_Negate(rd->raster);
+  // RASTER_Negate(rd->raster);
   // printf("\n================= CONFIG ===============\n");
   // RD_Print(rd);
   // getchar();

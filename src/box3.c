@@ -33,9 +33,9 @@ static Vector *BOX3_CalcCenter(Box3 *b);
 void BOX3_Reset(Box3 *b) { b->cpt = 0; }
 
 bool BOX3_IsPointInside(Box3 *b, Vector *point) {
-  return b->cpt && point->x <= b->max.x && point->x >= b->min.x &&
-         point->y <= b->max.y && point->y >= b->min.y && point->z <= b->max.z &&
-         point->z >= b->min.z;
+  return b->cpt && point->x < b->max.x && point->x > b->min.x &&
+         point->y < b->max.y && point->y > b->min.y && point->z < b->max.z &&
+         point->z > b->min.z;
 }
 
 void BOX3_AddPoint(Box3 *b, Vector *point) {
