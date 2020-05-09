@@ -68,16 +68,17 @@ void user_loop(unsigned int cpt) {
   RD_CalcProjectionVertices(rd); // Calcul des projections
   RD_CalcZbuffer(rd);            // Calcul du Z buffer
   RD_CalcNormales(rd);
+  RD_calcCacheBarycentres(rd);
 
   // Rendu
   // RD_DrawRaytracing(rd);
   RD_DrawFill(rd);
 
-  RD_DrawZbuffer(rd);
+  // RD_DrawZbuffer(rd);
   RD_DrawGbuffer(rd);
   Vector lum = {1, 1, 1};
   VECT_Normalise(&lum);
-  RD_DrawFbufferWithLum(rd, &lum, CL_CHARTREUSE);
+  // RD_DrawFbufferWithLum(rd, &lum, CL_CHARTREUSE);
 
   // RD_DrawWireframe(rd);
   // RD_DrawVertices(rd);

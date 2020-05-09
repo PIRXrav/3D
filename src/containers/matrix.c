@@ -40,7 +40,7 @@ Matrix *MATRIX_Init(uint32_t xmax, uint32_t ymax, uint32_t elemsize, char *ss) {
   return m;
 }
 
-void *MATRIX_Edit(Matrix *m, uint32_t x, uint32_t y) {
+inline void *MATRIX_Edit(Matrix *m, uint32_t x, uint32_t y) {
   assert(x < m->xmax && y < m->ymax);
   return m->data + (y * m->xmax + x) * m->elemsize;
 }

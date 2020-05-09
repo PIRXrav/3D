@@ -33,6 +33,9 @@
 static void calcProjectionVertex3(struct Render *rd, struct MeshVertex *p);
 
 static void calcNormaleFace(struct MeshFace *f);
+
+static void calcCacheBarycentreFace(struct MeshFace *f);
+
 static int computePlaneSegmentIntersection(const Vector segment[2],
                                            const Vector **facePoints,
                                            Vector *intersection);
@@ -252,11 +255,20 @@ extern void RD_CalcProjectionVertices(struct Render *rd) {
 
 extern void RD_CalcNormales(struct Render *rd) {
   Mesh *mesh;
-  // Vertices
   for (unsigned int i_mesh = 0; i_mesh < rd->nb_meshs; i_mesh++) {
     mesh = rd->meshs[i_mesh];
     for (unsigned int i = 0; i < MESH_GetNbFace(mesh); i++) {
       calcNormaleFace(MESH_GetFace(mesh, i));
+    }
+  }
+}
+
+extern void RD_calcCacheBarycentres(struct Render *rd) {
+  Mesh *mesh;
+  for (unsigned int i_mesh = 0; i_mesh < rd->nb_meshs; i_mesh++) {
+    mesh = rd->meshs[i_mesh];
+    for (unsigned int i = 0; i < MESH_GetNbFace(mesh); i++) {
+      calcCacheBarycentreFace(MESH_GetFace(mesh, i));
     }
   }
 }
@@ -266,16 +278,16 @@ extern void RD_CalcNormales(struct Render *rd) {
  */
 static void callbackWriteZbuffer(uint32_t x, uint32_t y, void **args) {
 
-  MeshFace *mf = (struct MeshFace *)args[1];
-  Vector *p1 = &mf->p0->sc;
-  Vector *p2 = &mf->p1->sc;
-  Vector *p3 = &mf->p2->sc;
+  MeshFace *f = (struct MeshFace *)args[1];
+  Vector *p1 = &f->p0->sc;
+  Vector *p2 = &f->p1->sc;
+  Vector *p3 = &f->p2->sc;
   struct Render *rd = (struct Render *)args[0];
 
-  if (x > rd->zbuffer->xmax || y > rd->zbuffer->ymax)
-    return;
+  assert(x < rd->zbuffer->xmax || y < rd->zbuffer->ymax);
 
   // to INT
+  /*
   p1->x = (double)(int)(p1->x);
   p1->y = (double)(int)(p1->y);
 
@@ -284,17 +296,10 @@ static void callbackWriteZbuffer(uint32_t x, uint32_t y, void **args) {
 
   p3->x = (double)(int)(p3->x);
   p3->y = (double)(int)(p3->y);
+  */
 
-  // Barycentre
-  double denum =
-      (p2->y - p3->y) * (p1->x - p3->x) + (p3->x - p2->x) * (p1->y - p3->y);
-  if (denum == 0) // Face invisible car dans le mauvais plan.
-    return;
-
-  double w1 =
-      ((p2->y - p3->y) * (x - p3->x) + (p3->x - p2->x) * (y - p3->y)) / denum;
-  double w2 =
-      ((p3->y - p1->y) * (x - p3->x) + (p1->x - p3->x) * (y - p3->y)) / denum;
+  double w1 = f->wp1 * (x - f->p2->sc.x) + f->wp2 * (y - f->p2->sc.y);
+  double w2 = f->wp3 * (x - f->p2->sc.x) + f->wp4 * (y - f->p2->sc.y);
   double w3 = 1 - w1 - w2;
 
   w1 = w1 > 0 ? w1 : 0;
@@ -310,7 +315,6 @@ static void callbackWriteZbuffer(uint32_t x, uint32_t y, void **args) {
 
   if (z4 > 1000000000 || z4 < 0 || isnan(z4)) {
     printf("Z = %f\n", z4);
-    printf("denum = %f\n", denum);
     printf("w1 = %f, w2 = %f, w3 = %f\n", w1, w2, w3);
     VECT_Print(p1);
     VECT_Print(p2);
@@ -322,7 +326,7 @@ static void callbackWriteZbuffer(uint32_t x, uint32_t y, void **args) {
   if (*(double *)MATRIX_Edit(rd->zbuffer, x, y) > z4 ||
       *(double *)MATRIX_Edit(rd->zbuffer, x, y) < 0.f) { // SI plus proche
     *(double *)MATRIX_Edit(rd->zbuffer, x, y) = z4;
-    *(MeshFace **)MATRIX_Edit(rd->fbuffer, x, y) = mf;
+    *(MeshFace **)MATRIX_Edit(rd->fbuffer, x, y) = f;
   }
 }
 
@@ -677,4 +681,22 @@ static void calcNormaleFace(struct MeshFace *f) {
   VECT_Sub(&s31, &f->p2->world, &f->p0->world);
   VECT_CrossProduct(&f->normal, &s21, &s31);
   VECT_Normalise(&f->normal);
+}
+
+static void calcCacheBarycentreFace(struct MeshFace *f) {
+  // Barycentre
+  double denum = (f->p1->sc.y - f->p2->sc.y) * (f->p0->sc.x - f->p2->sc.x) +
+                 (f->p2->sc.x - f->p1->sc.x) * (f->p0->sc.y - f->p2->sc.y);
+  if (denum == 0) { // Face invisible car dans le mauvais plan
+                    // ATTENTION! CHangement comportement !!!
+    f->wp1 = 0;
+    f->wp2 = 0;
+    f->wp3 = 0;
+    f->wp4 = 0;
+    return;
+  }
+  f->wp1 = (f->p1->sc.y - f->p2->sc.y) / denum;
+  f->wp3 = (f->p2->sc.y - f->p0->sc.y) / denum;
+  f->wp2 = (f->p2->sc.x - f->p1->sc.x) / denum;
+  f->wp4 = (f->p0->sc.x - f->p2->sc.x) / denum;
 }
