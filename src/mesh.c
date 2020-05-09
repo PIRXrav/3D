@@ -97,7 +97,7 @@ extern Mesh *MESH_Init(void) {
   m->vertices = ARRLISTP_Create();
   m->faces = ARRLISTP_Create();
   m->name = NULL;
-  MESH_VERT_Set(&m->origin, 0, 0, 0);
+  BOX3_Reset(&m->box);
   return m;
 }
 
@@ -148,6 +148,7 @@ extern MeshVertex *MESH_GetVertex(const Mesh *mesh, size_t index) {
  * Ajoute un sommet au mesh si il n'existe pas. On le retourne.
  */
 extern MeshVertex *MESH_AddVertex(Mesh *mesh, MeshVertex *vertex) {
+  BOX3_AddPoint(&mesh->box, &vertex->world);
   return ARRLISTP_Add(mesh->vertices, vertex);
 }
 

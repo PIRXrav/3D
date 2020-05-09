@@ -5,6 +5,7 @@
  * Includes
  ******************************************************************************/
 
+#include "box3.h"
 #include "color.h"
 #include "containers/arraylist.h"
 #include "geo.h"
@@ -45,7 +46,7 @@ struct Mesh {
   char *name;          // Le nom du mesh
   ArrayList *vertices; // Vector
   ArrayList *faces;    // MeshFace
-  MeshVertex origin;
+  Box3 box;            // Bonding box
 };
 
 /*******************************************************************************

@@ -35,8 +35,6 @@ typedef struct RasterPos RasterPos;
  * Prototypes
  ******************************************************************************/
 
-struct Raster *RASTER_Init(uint32_t xmax, uint32_t ymax);
-
 color RASTER_GetPixel(Matrix *s, RasterPos p);
 color RASTER_GetPixelxy(Matrix *s, uint32_t x, uint32_t y);
 

@@ -32,17 +32,22 @@ void user_loop(unsigned int cpt) {
   // printf("%d\n", cpt);
 
   static double angle = 7.1;
-  struct Vector cam_pos = {0, 0, 0};
-  static struct Vector barycentre = {0, 500, 0};
+  struct Vector *barycentre = &rd->meshs[0]->box.center;
+  double d = 2 * sqrt(VECT_DistanceSquare(&rd->meshs[0]->box.min,
+                                          &rd->meshs[0]->box.max));
+
   static struct Vector cam_vect = {0, 0, 0};
+  static struct Vector cam_pos = {0, 0, 0};
+
+  VECT_Print(barycentre);
+  printf("d : %f \n", d);
 
   /* pos */
   angle += 0.005;
-  double d = 1500;
   cam_pos.x = cos(angle) * d;
   cam_pos.y = cos(angle / 2) * d;
   cam_pos.z = sin(angle) * d;
-  VECT_Sub(&cam_vect, &rd->cam_pos, &barycentre);
+  VECT_Sub(&cam_vect, &rd->cam_pos, barycentre);
   RD_SetCam(rd, &cam_pos, &cam_vect, NULL);
 
   // Mise a jour des objets
