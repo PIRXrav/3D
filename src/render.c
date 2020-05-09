@@ -173,6 +173,7 @@ extern struct Render *RD_Init(unsigned int xmax, unsigned int ymax) {
   assert(ret->meshs);
   ret->raster = MATRIX_Init(xmax, ymax, sizeof(color), "color");
   ret->zbuffer = MATRIX_Init(xmax, ymax, sizeof(double), "double");
+  ret->fbuffer = MATRIX_Init(xmax, ymax, sizeof(MeshFace *), "MF*");
 
   // Repere
   VECT_Cpy(&ret->p0.world, &VECT_0);
@@ -251,43 +252,18 @@ extern void RD_CalcNormales(struct Render *rd) {
   }
 }
 
-extern void RD_DrawRaytracing(struct Render *rd) {
-  // Raytracing
-  static struct Vector ray;
-  static struct Vector hit; // Hit point
-  for (unsigned int y = 0; y < rd->raster->ymax; y++) {
-    for (unsigned int x = 0; x < rd->raster->xmax; x++) {
-      RD_CalcRayDir(rd, x, y, &ray);
-      RASTER_DrawPixelxy(rd->raster, x, y, RD_RayTraceOnRD(rd, &ray, &hit));
-    }
-  }
-}
-
-extern void RD_DrawWireframe(struct Render *rd) {
-  Mesh *mesh;
-  MeshFace *f;
-  // Wirefram
-  for (unsigned int i_mesh = 0; i_mesh < rd->nb_meshs; i_mesh++) {
-    mesh = rd->meshs[i_mesh];
-    for (unsigned int i_f = 0; i_f < MESH_GetNbFace(mesh); i_f++) {
-      f = MESH_GetFace(mesh, i_f);
-      RASTER_DrawTriangle(rd->raster, &f->p0->screen, &f->p1->screen,
-                          &f->p2->screen, CL_ORANGE);
-    }
-  }
-}
-
 /*
  * https://codeplea.com/triangular-interpolation?fbclid=IwAR38TFpipmfuQ5bM2P0Y07eym1ZHlt7-ZlcZAnEIb7EeOYU3uJzqWxuK0Ws
  */
-void callbackWriteZbuffer(uint32_t x, uint32_t y, void **args) {
+static void callbackWriteZbuffer(uint32_t x, uint32_t y, void **args) {
 
-  Vector *p1 = &((struct MeshFace *)args[1])->p0->sc;
-  Vector *p2 = &((struct MeshFace *)args[1])->p1->sc;
-  Vector *p3 = &((struct MeshFace *)args[1])->p2->sc;
-  Matrix *m = (Matrix *)args[0];
+  MeshFace *mf = (struct MeshFace *)args[1];
+  Vector *p1 = &mf->p0->sc;
+  Vector *p2 = &mf->p1->sc;
+  Vector *p3 = &mf->p2->sc;
+  struct Render *rd = (struct Render *)args[0];
 
-  if (x > m->xmax || y > m->ymax)
+  if (x > rd->zbuffer->xmax || y > rd->zbuffer->ymax)
     return;
 
   // to INT
@@ -334,9 +310,11 @@ void callbackWriteZbuffer(uint32_t x, uint32_t y, void **args) {
     assert(0);
   }
 
-  if (*(double *)MATRIX_Edit(m, x, y) > z4 ||
-      *(double *)MATRIX_Edit(m, x, y) < 0.f)
-    *(double *)MATRIX_Edit(m, x, y) = z4;
+  if (*(double *)MATRIX_Edit(rd->zbuffer, x, y) > z4 ||
+      *(double *)MATRIX_Edit(rd->zbuffer, x, y) < 0.f) { // SI plus proche
+    *(double *)MATRIX_Edit(rd->zbuffer, x, y) = z4;
+    *(MeshFace **)MATRIX_Edit(rd->fbuffer, x, y) = mf;
+  }
 }
 
 extern void RD_CalcZbuffer(struct Render *rd) {
@@ -344,8 +322,8 @@ extern void RD_CalcZbuffer(struct Render *rd) {
   MeshFace *f;
   for (size_t x = 0; x < rd->zbuffer->xmax; x++) {
     for (size_t y = 0; y < rd->zbuffer->ymax; y++) {
-      double *z = (double *)MATRIX_Edit(rd->zbuffer, x, y);
-      *z = -1.f;
+      *(double *)MATRIX_Edit(rd->zbuffer, x, y) = -1.f;
+      *(MeshFace **)MATRIX_Edit(rd->fbuffer, x, y) = NULL;
     }
   }
   for (unsigned int i_mesh = 0; i_mesh < rd->nb_meshs; i_mesh++) {
@@ -353,7 +331,7 @@ extern void RD_CalcZbuffer(struct Render *rd) {
     for (unsigned int i_f = 0; i_f < MESH_GetNbFace(mesh); i_f++) {
       f = MESH_GetFace(mesh, i_f);
       void *args[2];
-      args[0] = rd->zbuffer;
+      args[0] = rd;
       args[1] = f;
 
       Box3 box;
@@ -380,6 +358,32 @@ extern void RD_CalcZbuffer(struct Render *rd) {
         // getchar();
         printf("\n");*/
       }
+    }
+  }
+}
+
+extern void RD_DrawRaytracing(struct Render *rd) {
+  // Raytracing
+  static struct Vector ray;
+  static struct Vector hit; // Hit point
+  for (unsigned int y = 0; y < rd->raster->ymax; y++) {
+    for (unsigned int x = 0; x < rd->raster->xmax; x++) {
+      RD_CalcRayDir(rd, x, y, &ray);
+      RASTER_DrawPixelxy(rd->raster, x, y, RD_RayTraceOnRD(rd, &ray, &hit));
+    }
+  }
+}
+
+extern void RD_DrawWireframe(struct Render *rd) {
+  Mesh *mesh;
+  MeshFace *f;
+  // Wirefram
+  for (unsigned int i_mesh = 0; i_mesh < rd->nb_meshs; i_mesh++) {
+    mesh = rd->meshs[i_mesh];
+    for (unsigned int i_f = 0; i_f < MESH_GetNbFace(mesh); i_f++) {
+      f = MESH_GetFace(mesh, i_f);
+      RASTER_DrawTriangle(rd->raster, &f->p0->screen, &f->p1->screen,
+                          &f->p2->screen, CL_ORANGE);
     }
   }
 }
@@ -447,6 +451,19 @@ extern void RD_DrawNormales(struct Render *rd) {
       b1.world.z = f->p0->world.z + f->normal.z;
       calcProjectionVertex3(rd, &b1);
       RASTER_DrawLine(rd->raster, &f->p0->screen, &b1.screen, CL_BLUE);
+    }
+  }
+}
+
+extern void RD_DrawFbuffer(struct Render *rd) {
+  for (size_t x = 0; x < rd->raster->xmax; x++) {
+    for (size_t y = 0; y < rd->raster->ymax; y++) {
+      MeshFace *f = *(MeshFace **)MATRIX_Edit(rd->fbuffer, x, y);
+      if (f != NULL)
+        RASTER_DrawPixelxy(rd->raster, x, y,
+                           CL_rgb(fabs(f->normal.x) * 255,
+                                  fabs(f->normal.y) * 255,
+                                  fabs(f->normal.z * 255)));
     }
   }
 }

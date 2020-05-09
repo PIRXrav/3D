@@ -57,6 +57,9 @@ struct Render {
 
   /* Z buffer */
   Matrix *zbuffer;
+
+  /* Face buffer */
+  Matrix *fbuffer;
 };
 
 /*******************************************************************************
@@ -111,6 +114,7 @@ void RD_DrawVertices(struct Render *rd);
 void RD_DrawAxis(struct Render *rd);
 void RD_DrawFill(struct Render *rd);
 void RD_DrawNormales(struct Render *rd);
+void RD_DrawFbuffer(struct Render *rd);
 
 void RD_CalcProjectionVertices(struct Render *rd);
 void RD_CalcNormales(struct Render *rd);
