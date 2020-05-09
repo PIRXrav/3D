@@ -377,9 +377,8 @@ extern void RD_CalcZbuffer(struct Render *rd) {
 
       Box3 box;
       BOX3_Reset(&box);
-      Vector p1 = {1, 1, 0};
-      Vector p2 = {(double)rd->raster->xmax - 1, (double)rd->raster->ymax - 1,
-                   10000.f};
+      Vector p1 = {0, 0, 0};
+      Vector p2 = {(double)rd->raster->xmax, (double)rd->raster->ymax, 10000.f};
       BOX3_AddPoint(&box, &p1);
       BOX3_AddPoint(&box, &p2);
 
@@ -388,6 +387,17 @@ extern void RD_CalcZbuffer(struct Render *rd) {
           BOX3_IsPointInside(&box, &f->p2->sc)) {
         RASTER_GenerateFillTriangle(&f->p0->screen, &f->p1->screen,
                                     &f->p2->screen, callbackWriteZbuffer, args);
+      } else {
+        /*printf("ERR: ");
+        VECT_Print(&f->p0->sc);
+        VECT_Print(&f->p1->sc);
+        VECT_Print(&f->p2->sc);
+        printf("\n");
+        RASTER_POS_Print(&f->p0->screen);
+        RASTER_POS_Print(&f->p1->screen);
+        RASTER_POS_Print(&f->p2->screen);
+        // getchar();
+        printf("\n");*/
       }
     }
   }

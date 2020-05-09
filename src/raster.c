@@ -6,6 +6,7 @@
 #include "color.h"
 #include <assert.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 /*******************************************************************************
@@ -47,6 +48,7 @@ RASTER_DrawFillTopFlatTriangle(RasterPos *p1, RasterPos *p2, RasterPos *p3,
 /*******************************************************************************
  * Public function
  ******************************************************************************/
+void RASTER_POS_Print(RasterPos *p) { printf("xy{%d %d}", p->x, p->y); }
 
 void RP_Cpy(RasterPos *p1, RasterPos *p2) {
   p1->x = p2->x;
@@ -256,7 +258,7 @@ static void RASTER_DrawFillBottomFlatTriangle(
   float curx1 = x1;
   float curx2 = x1;
 
-  for (uint32_t scanlineY = y1; scanlineY <= y2; scanlineY++) {
+  for (int32_t scanlineY = y1; scanlineY <= y2; scanlineY++) {
     RASTER_DrawHorizontalLine((int)curx1, (int)curx2, scanlineY, callbackxy,
                               args);
     curx1 += invslope1;
@@ -276,7 +278,7 @@ RASTER_DrawFillTopFlatTriangle(RasterPos *p1, RasterPos *p2, RasterPos *p3,
   float curx1 = x3;
   float curx2 = x3;
 
-  for (uint32_t scanlineY = y3; scanlineY >= y1; scanlineY--) {
+  for (int32_t scanlineY = y3; scanlineY >= y1; scanlineY--) {
     RASTER_DrawHorizontalLine((int)curx1, (int)curx2, scanlineY, callbackxy,
                               args);
     curx1 -= invslope1;
