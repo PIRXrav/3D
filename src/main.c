@@ -30,36 +30,44 @@ void mouse_event(const struct event *event) {
 
 void user_loop(unsigned int cpt) {
   // printf("%d\n", cpt);
-
+  // getchar();
+  printf("================= AVANT ===============\n");
+  RD_Print(rd);
   static double angle = 7.1;
   struct Vector *barycentre = &rd->meshs[0]->box.center;
-  double d = 2 * sqrt(VECT_DistanceSquare(&rd->meshs[0]->box.min,
-                                          &rd->meshs[0]->box.max));
+  double d = 3.5 * sqrt(VECT_DistanceSquare(&rd->meshs[0]->box.min,
+                                            &rd->meshs[0]->box.max));
 
-  static struct Vector cam_vect = {0, 0, 0};
-  static struct Vector cam_pos = {0, 0, 0};
-
+  static struct Vector cam_vect;
+  static struct Vector cam_pos;
   VECT_Print(barycentre);
   printf("d : %f \n", d);
-
   /* pos */
-  angle += 0.005;
+
+  angle += 0.05;
   cam_pos.x = cos(angle) * d;
   cam_pos.y = cos(angle / 2) * d;
   cam_pos.z = sin(angle) * d;
   VECT_Sub(&cam_vect, &rd->cam_pos, barycentre);
+
   RD_SetCam(rd, &cam_pos, &cam_vect, NULL);
+  fflush(stdout);
 
   // Mise a jour des objets
-  RD_CalcProjectionVertices(rd);
+  RD_CalcProjectionVertices(rd); // Calcul des projections
+  RD_CalcZbuffer(rd);            // Calcul du Z buffer
 
   // Rendu
   // RD_DrawRaytracing(rd);
   RD_DrawFill(rd);
-  RD_DrawZbuffTESTFUNC(rd);
+  RD_DrawZbuffer(rd);
   // RD_DrawWireframe(rd);
   // RD_DrawVertices(rd);
   RD_DrawAxis(rd);
+
+  printf("================= APRES ===============\n");
+  RD_Print(rd);
+  // getchar();
 }
 
 void mainFenetre() {
@@ -79,7 +87,7 @@ void mainTerm() {
 
 int main(int argc, char **argv) {
 
-  char *modele = "data/cube.obj";
+  char *modele = "data/extern/teapot.obj";
   unsigned w = 400;
   unsigned h = 400;
   int mode = MODE_SDL2;

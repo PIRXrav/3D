@@ -171,6 +171,7 @@ extern struct Render *RD_Init(unsigned int xmax, unsigned int ymax) {
   ret->meshs = malloc(sizeof(struct mesh *) * ret->nb_meshs);
   assert(ret->meshs);
   ret->raster = MATRIX_Init(xmax, ymax, sizeof(color), "color");
+  ret->zbuffer = MATRIX_Init(xmax, ymax, sizeof(double), "double");
 
   // Repere
   VECT_Cpy(&ret->p0.world, &VECT_0);
@@ -183,8 +184,8 @@ extern struct Render *RD_Init(unsigned int xmax, unsigned int ymax) {
 
   // cam
   ret->fov_rad = 1.0;
-  struct Vector cam_pos = {100000, 10, 0};
-  struct Vector cam_forward = {1, 0, 0};
+  struct Vector cam_pos = {100000, 100000, 100000};
+  struct Vector cam_forward = {100000, 100000, 100000};
   struct Vector cam_up = {0, 1, 0};
   RD_SetCam(ret, &cam_pos, &cam_forward, &cam_up);
 
@@ -204,12 +205,16 @@ extern void RD_AddMesh(struct Render *rd, struct Mesh *m) {
 
 void RD_Print(struct Render *rd) {
   printf(" ============ RENDER =========== \n");
-  printf("\tVECT CAM: ");
-  VECT_Print(&rd->cam_wp);
+  printf("\nCAM VECT : ");
+  VECT_Print(&rd->cam_u);
+  VECT_Print(&rd->cam_v);
+  VECT_Print(&rd->cam_w);
+  printf("\nCAM POS: ");
+  VECT_Print(&rd->cam_pos);
   printf("\n");
   for (unsigned int i_mesh = 0; i_mesh < rd->nb_meshs; i_mesh++) {
-    MESH_Print(rd->meshs[i_mesh]);
-    printf("\n");
+    // MESH_Print(rd->meshs[i_mesh]);
+    // printf("\n");
   }
 }
 
@@ -255,15 +260,50 @@ extern void RD_DrawWireframe(struct Render *rd) {
   }
 }
 
+int isDoubleGreater(void *a, void *b) {
+  double aa = *(double *)a;
+  double bb = *(double *)b;
+  return aa < bb;
+}
+
+int isDoubleLower(void *a, void *b) {
+  double aa = *(double *)a;
+  double bb = *(double *)b;
+  if (bb < 0)
+    return 0;
+  if (aa < 0)
+    return 1;
+  return bb < aa;
+}
+
+void RD_DrawZbuffer(struct Render *rd) {
+  double maxz = *(double *)MATRIX_Max(rd->zbuffer, isDoubleGreater);
+  double minz = *(double *)MATRIX_Max(rd->zbuffer, isDoubleLower);
+
+  printf("maxz : %f, minz : %f\n", maxz, minz);
+  for (size_t x = 0; x < rd->raster->xmax; x++) {
+    for (size_t y = 0; y < rd->raster->ymax; y++) {
+      double z = *(double *)MATRIX_Edit(rd->zbuffer, x, y);
+      if (z >= 0) {
+        double coef = (z - minz) / (maxz - minz);
+        RASTER_DrawPixelxy(rd->raster, x, y, CL_Mix(CL_GREEN, CL_PURPLE, coef));
+      }
+    }
+  }
+}
 /*
  *
  * https://codeplea.com/triangular-interpolation?fbclid=IwAR38TFpipmfuQ5bM2P0Y07eym1ZHlt7-ZlcZAnEIb7EeOYU3uJzqWxuK0Ws
  */
-void TESTDRAW(uint32_t x, uint32_t y, void **args) {
+void callbackWriteZbuffer(uint32_t x, uint32_t y, void **args) {
 
   Vector *p1 = &((struct MeshFace *)args[1])->p0->sc;
   Vector *p2 = &((struct MeshFace *)args[1])->p1->sc;
   Vector *p3 = &((struct MeshFace *)args[1])->p2->sc;
+  Matrix *m = (Matrix *)args[0];
+
+  if (x > m->xmax || y > m->ymax)
+    return;
 
   // to INT
   p1->x = (double)(int)(p1->x);
@@ -278,6 +318,9 @@ void TESTDRAW(uint32_t x, uint32_t y, void **args) {
   // Barycentre
   double denum =
       (p2->y - p3->y) * (p1->x - p3->x) + (p3->x - p2->x) * (p1->y - p3->y);
+  if (denum == 0) // Face invisible car dans le mauvais plan.
+    return;
+
   double w1 =
       ((p2->y - p3->y) * (x - p3->x) + (p3->x - p2->x) * (y - p3->y)) / denum;
   double w2 =
@@ -294,33 +337,41 @@ void TESTDRAW(uint32_t x, uint32_t y, void **args) {
   w3 /= sum;
 
   double z4 = w1 * p1->z + w2 * p2->z + w3 * p3->z;
-  double seuil = 3000;
-  // printf("%f\n", z4);
-  if (z4 >= seuil) {
-    // printf("s[%f]:{%f %f %f}\n", z4, w1, w2, w3);
-    RASTER_DrawPixelxy(args[0], x, y, CL_PURPLE);
-    return;
+
+  if (z4 > 10000 || z4 < 0 || isnan(z4)) {
+    printf("Z = %f\n", z4);
+    printf("denum = %f\n", denum);
+    printf("w1 = %f, w2 = %f, w3 = %f\n", w1, w2, w3);
+    VECT_Print(p1);
+    VECT_Print(p2);
+    VECT_Print(p3);
+    printf("\n");
+    assert(0);
   }
 
-  if (RASTER_GetPixelxy(args[0], x, y).rgb.r <
-      CL_Mix(CL_WHITE, CL_BLACK, z4 / seuil).rgb.r)
-    RASTER_DrawPixelxy(args[0], x, y, CL_Mix(CL_WHITE, CL_BLACK, z4 / seuil));
-  // printf("%f", ((struct MeshFace *)args[1])->p0->x);
+  if (*(double *)MATRIX_Edit(m, x, y) > z4 ||
+      *(double *)MATRIX_Edit(m, x, y) < 0.f)
+    *(double *)MATRIX_Edit(m, x, y) = z4;
 }
 
-extern void RD_DrawZbuffTESTFUNC(struct Render *rd) {
+extern void RD_CalcZbuffer(struct Render *rd) {
   Mesh *mesh;
   MeshFace *f;
-  // Wirefram
+  for (size_t x = 0; x < rd->zbuffer->xmax; x++) {
+    for (size_t y = 0; y < rd->zbuffer->ymax; y++) {
+      double *z = (double *)MATRIX_Edit(rd->zbuffer, x, y);
+      *z = -1.f;
+    }
+  }
   for (unsigned int i_mesh = 0; i_mesh < rd->nb_meshs; i_mesh++) {
     mesh = rd->meshs[i_mesh];
     for (unsigned int i_f = 0; i_f < MESH_GetNbFace(mesh); i_f++) {
       f = MESH_GetFace(mesh, i_f);
       void *args[2];
-      args[0] = rd->raster;
+      args[0] = rd->zbuffer;
       args[1] = f;
       RASTER_GenerateFillTriangle(&f->p0->screen, &f->p1->screen,
-                                  &f->p2->screen, TESTDRAW, args);
+                                  &f->p2->screen, callbackWriteZbuffer, args);
     }
   }
 }

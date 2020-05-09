@@ -54,6 +54,9 @@ struct Render {
 
   /* Ecran */
   Matrix *raster; // Rendu de la scene 2D matrix
+
+  /* Z buffer */
+  Matrix *zbuffer;
 };
 
 /*******************************************************************************

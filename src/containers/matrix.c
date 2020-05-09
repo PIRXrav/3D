@@ -55,6 +55,18 @@ void MATRIX_Free(Matrix *m) {
   free(m);
 }
 
+void *MATRIX_Max(Matrix *m, int (*isgreater)(void *, void *)) {
+  void *max = m->data;
+  for (size_t x = 0; x < m->xmax; x++) {
+    for (size_t y = 0; y < m->ymax; y++) {
+      void *elem = m->data + (y * m->xmax + x) * m->elemsize;
+      if (isgreater(max, elem))
+        max = elem;
+    }
+  }
+  return max;
+}
+
 /*******************************************************************************
  * Internal function
  ******************************************************************************/

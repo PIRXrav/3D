@@ -38,5 +38,6 @@ Matrix *MATRIX_Init(uint32_t xmax, uint32_t ymax, uint32_t elemsize, char *ss);
 void *MATRIX_Edit(Matrix *m, uint32_t x, uint32_t y);
 void MATRIX_Clear(Matrix *m);
 void MATRIX_Free(Matrix *m);
+void *MATRIX_Max(Matrix *m, int (*isgreater)(void *, void *));
 
 #endif /* _MATRIX_H_ */
