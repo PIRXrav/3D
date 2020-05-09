@@ -29,27 +29,22 @@ void mouse_event(const struct event *event) {
 }
 
 void user_loop(unsigned int cpt) {
-  // printf("%d\n", cpt);
-  // getchar();
-  printf("================= AVANT ===============\n");
-  RD_Print(rd);
   static double angle = 7.1;
   struct Vector *barycentre = &rd->meshs[0]->box.center;
-  double d = 3.5 * sqrt(VECT_DistanceSquare(&rd->meshs[0]->box.min,
+  double d = 1.2 * sqrt(VECT_DistanceSquare(&rd->meshs[0]->box.min,
                                             &rd->meshs[0]->box.max));
 
   static struct Vector cam_vect;
   static struct Vector cam_pos;
-  VECT_Print(barycentre);
-  printf("d : %f \n", d);
+  // VECT_Print(barycentre);
+  // printf("d : %f \n", d);
   /* pos */
 
   angle += 0.05;
   cam_pos.x = cos(angle) * d;
   cam_pos.y = cos(angle / 2) * d;
   cam_pos.z = sin(angle) * d;
-  VECT_Sub(&cam_vect, &rd->cam_pos, barycentre);
-
+  VECT_Sub(&cam_vect, &cam_pos, barycentre);
   RD_SetCam(rd, &cam_pos, &cam_vect, NULL);
   fflush(stdout);
 
@@ -65,8 +60,8 @@ void user_loop(unsigned int cpt) {
   // RD_DrawVertices(rd);
   RD_DrawAxis(rd);
 
-  printf("================= APRES ===============\n");
-  RD_Print(rd);
+  // printf("\n================= CONFIG ===============\n");
+  // RD_Print(rd);
   // getchar();
 }
 

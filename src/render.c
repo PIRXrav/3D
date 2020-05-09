@@ -212,10 +212,15 @@ void RD_Print(struct Render *rd) {
   printf("\nCAM POS: ");
   VECT_Print(&rd->cam_pos);
   printf("\n");
+  printf("NB MESHS: %d\n", rd->nb_meshs);
   for (unsigned int i_mesh = 0; i_mesh < rd->nb_meshs; i_mesh++) {
     // MESH_Print(rd->meshs[i_mesh]);
-    // printf("\n");
+    printf("\t->[F:%ld V:%ld]", MESH_GetNbFace(rd->meshs[i_mesh]),
+           MESH_GetNbVertice(rd->meshs[i_mesh]));
+    VECT_Print(&rd->meshs[i_mesh]->box.center);
   }
+  printf("SIZE : x = %d, y = %d\n", rd->raster->xmax, rd->raster->ymax);
+  printf("\n");
 }
 
 extern void RD_CalcProjectionVertices(struct Render *rd) {
@@ -279,14 +284,13 @@ int isDoubleLower(void *a, void *b) {
 void RD_DrawZbuffer(struct Render *rd) {
   double maxz = *(double *)MATRIX_Max(rd->zbuffer, isDoubleGreater);
   double minz = *(double *)MATRIX_Max(rd->zbuffer, isDoubleLower);
-
-  printf("maxz : %f, minz : %f\n", maxz, minz);
+  // printf("maxz : %f, minz : %f\n", maxz, minz);
   for (size_t x = 0; x < rd->raster->xmax; x++) {
     for (size_t y = 0; y < rd->raster->ymax; y++) {
       double z = *(double *)MATRIX_Edit(rd->zbuffer, x, y);
       if (z >= 0) {
         double coef = (z - minz) / (maxz - minz);
-        RASTER_DrawPixelxy(rd->raster, x, y, CL_Mix(CL_GREEN, CL_PURPLE, coef));
+        RASTER_DrawPixelxy(rd->raster, x, y, CL_Mix(CL_WHITE, CL_BLACK, coef));
       }
     }
   }
@@ -338,7 +342,7 @@ void callbackWriteZbuffer(uint32_t x, uint32_t y, void **args) {
 
   double z4 = w1 * p1->z + w2 * p2->z + w3 * p3->z;
 
-  if (z4 > 10000 || z4 < 0 || isnan(z4)) {
+  if (z4 > 1000000000 || z4 < 0 || isnan(z4)) {
     printf("Z = %f\n", z4);
     printf("denum = %f\n", denum);
     printf("w1 = %f, w2 = %f, w3 = %f\n", w1, w2, w3);
