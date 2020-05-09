@@ -29,6 +29,9 @@
  ******************************************************************************/
 
 static void calcProjectionVertex3(struct Render *rd, struct MeshVertex *p);
+static int computePlaneSegmentIntersection(const Vector segment[2],
+                                           Vector **facePoints,
+                                           Vector *intersection);
 
 /*
  * Calcule d'une raie
@@ -350,6 +353,146 @@ extern void RD_DrawFill(struct Render *rd) {
 /*******************************************************************************
  * Internal function
  ******************************************************************************/
+
+// https://en.wikipedia.org/wiki/Line%E2%80%93plane_intersection
+static int computePlaneSegmentIntersection(const Vector segment[2],
+                                           Vector **facePoints,
+                                           Vector *intersection) {
+  const Vector *a = &segment[1], *b = &segment[2];
+  Vector ab;
+  VECT_Sub(&ab, b, a);
+  const Vector *p0 = facePoints[0], *p1 = facePoints[1], *p2 = facePoints[2];
+  Vector p01, p02;
+  VECT_Sub(&p01, p1, p0);
+  VECT_Sub(&p02, p2, p0);
+
+  Vector num1, num2, denom1, denom2;
+  VECT_CrossProduct(&num1, &p01, &p02);
+  VECT_Sub(&num2, a, p0);
+  double numerateur = VECT_DotProduct(&num1, &num2);
+
+  VECT_MultSca(&denom1, &ab, -1);
+  VECT_CrossProduct(&denom2, &p01, &p02);
+  double denominateur = VECT_DotProduct(&denom1, &denom2);
+
+  if (fabs(denominateur) < 0.00001)
+    return 0;
+
+  double t = numerateur / denominateur;
+
+  VECT_MultSca(&ab, &ab, t);
+  VECT_Add(intersection, a, &ab);
+  return 1;
+}
+
+// TODO: opti : remplacer les allocations dynamiques par des tableaux statiques
+// avec comme taille le nombre maximum de sommets possibles (7 ?)
+static void RD_DrawFace(struct Render *rd, const MeshFace *face) {
+
+  /* Pseudo code
+   *
+   * for (cube_face in projection_cube) {
+   *    newFace = Face.empty();
+   *    prev_point = face.last_point;
+   *    for (current_point in face) {
+   *        intersection =
+   *            Intersection_Segment_Face((prev_point, current_point),
+   *                                    cube_face);
+
+   *        if (current_point inside cube_face)
+   *            newFace.add(current_point);
+   *        if (intersection)
+   *            newFace.add(intersection);
+   *        prev_point = current;
+   *    }
+   *    face = newFace;
+   * }
+   */
+  double far = 100000;
+  // Sommets du cube face avant, face arriere, on commence en haut a gauche,
+  // sens trigo
+  static Vector cubeVertices[8] = {{0, 0, 0}, {0, 1, 0}, {1, 1, 0}, {1, 0, 0},
+                                   {0, 0, 1}, {0, 1, 1}, {1, 1, 1}, {1, 0, 1}};
+
+  for (unsigned i = 0; i < 8; i++) {
+    cubeVertices[i].x *= rd->raster->xmax;
+    cubeVertices[i].y *= rd->raster->ymax;
+    cubeVertices[i].z *= far;
+  }
+
+  // Cube de projection (seuls les 3 premiers sommets sont utilises mais pour
+  // etre plus clair on met tout, ca coute rien)
+  static Vector *cube[6][4] = {
+      {cubeVertices, cubeVertices + 1, cubeVertices + 2,
+       cubeVertices + 3}, // Face devant
+      {cubeVertices + 3, cubeVertices + 2, cubeVertices + 6,
+       cubeVertices + 7}, // Face droite
+      {cubeVertices + 7, cubeVertices + 4, cubeVertices + 5,
+       cubeVertices + 6}, // Face arriere
+      {cubeVertices + 4, cubeVertices + 5, cubeVertices + 1,
+       cubeVertices}, // Face gauche
+      {cubeVertices + 4, cubeVertices, cubeVertices + 3,
+       cubeVertices + 7}, // Face dessus
+      {cubeVertices + 5, cubeVertices + 1, cubeVertices + 2,
+       cubeVertices + 6} // Face dessous
+  };
+
+  static Vector cubeInsidePoint;
+  VECT_Set(&cubeInsidePoint, rd->raster->xmax / 2, rd->raster->ymax / 2,
+           far / 2);
+
+  ArrayList *facePoints = ARRLIST_Create(sizeof(MeshVertex));
+  ARRLIST_Add(facePoints, face->p0);
+  ARRLIST_Add(facePoints, face->p1);
+  ARRLIST_Add(facePoints, face->p2);
+
+  for (unsigned cf = 0; cf < 6; cf++) {
+    ArrayList *newFace = ARRLIST_Create(sizeof(MeshVertex));
+    MeshVertex *prevPoint =
+        ARRLIST_Get(facePoints, ARRLIST_GetSize(facePoints) - 1);
+
+    Vector *facePoint = cube[cf][0];
+    Vector vectDirecteurFace;
+    VECT_Sub(&vectDirecteurFace, facePoint, &cubeInsidePoint);
+
+    for (unsigned p = 0; p < ARRLIST_GetSize(facePoints); p++) {
+
+      MeshVertex *currentPoint = ARRLIST_Get(facePoints, p);
+      Vector segment[2] = {prevPoint->world, currentPoint->world};
+      MeshVertex intersection;
+
+      int hasIntersection = computePlaneSegmentIntersection(
+          segment, cube[cf], &intersection.world);
+
+      Vector vectCurrent;
+      VECT_Sub(&vectCurrent, &currentPoint->world, facePoint);
+
+      if (VECT_DotProduct(&vectDirecteurFace, &vectCurrent) >= 0)
+        ARRLIST_Add(newFace, &currentPoint);
+      if (hasIntersection)
+        ARRLIST_Add(newFace, &intersection);
+
+      prevPoint = currentPoint;
+    }
+    ARRLIST_Free(facePoints);
+    facePoints = newFace;
+  }
+
+  unsigned nbFaces = 0;
+  MeshFace **faces = MESH_FACE_FromVertices(ARRLIST_GetData(facePoints),
+                                            ARRLIST_GetSize(facePoints),
+                                            &nbFaces, face->color);
+
+  for (unsigned i = 0; i < nbFaces; i++) {
+    MeshFace *face = faces[i];
+
+    RASTER_DrawFillTriangle(
+        rd->raster, (RasterPos){face->p0->world.x, face->p0->world.y},
+        (RasterPos){face->p1->world.x, face->p1->world.y},
+        (RasterPos){face->p2->world.x, face->p2->world.y}, face->color);
+  }
+  ARRLIST_Free(facePoints);
+}
 
 /*
  * 3D projection

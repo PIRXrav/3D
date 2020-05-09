@@ -40,6 +40,8 @@ RASTER_DrawFillTopFlatTriangle(RasterPos *p1, RasterPos *p2, RasterPos *p3,
                                void (*callbackxy)(uint32_t, uint32_t, void **),
                                void **args);
 
+static void callbackDrawXY(uint32_t x, uint32_t y, void **args);
+
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -166,6 +168,12 @@ RASTER_GenerateFillTriangle(RasterPos *p1, RasterPos *p2, RasterPos *p3,
   }
 }
 
+extern void RASTER_DrawFillTriangle(Matrix *s, RasterPos *p1, RasterPos *p2,
+                                    RasterPos *p3, color c) {
+  void *args[2] = {s, &c};
+  RASTER_GenerateFillTriangle(p1, p2, p3, callbackDrawXY, args);
+}
+
 extern void RASTER_DrawCircle(Matrix *s, RasterPos *p, int r, color c) {
   int xc = p->x;
   int yc = p->y;
@@ -273,4 +281,10 @@ RASTER_DrawFillTopFlatTriangle(RasterPos *p1, RasterPos *p2, RasterPos *p3,
     curx1 -= invslope1;
     curx2 -= invslope2;
   }
+}
+
+static void callbackDrawXY(uint32_t x, uint32_t y, void **args) {
+  Matrix *s = args[0];
+  color c = *(color *)args[1];
+  RASTER_DrawPixelxy(s, x, y, c);
 }
