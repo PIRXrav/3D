@@ -13,6 +13,7 @@
 #define MODE_SDL2 1
 
 struct Render *rd;
+double camDistFactor = 0.5;
 
 void mouse_event(const struct event *event) {
   if (event->data.mouse.dx > 0 || event->data.mouse.dy > 0) {
@@ -28,11 +29,22 @@ void mouse_event(const struct event *event) {
   }
 }
 
+void key_event(const struct event *event) {
+  if (event->data.key.state) {
+    if (event->data.key.code == 'm')
+      camDistFactor *= 0.95;
+    else if (event->data.key.code == 'l')
+      camDistFactor *= 1.05;
+
+    camDistFactor = fmax(camDistFactor, 0);
+  }
+}
+
 void user_loop(unsigned int cpt) {
   static double angle = 7.1;
   struct Vector *barycentre = &rd->meshs[0]->box.center;
-  double d = 0.5 * sqrt(VECT_DistanceSquare(&rd->meshs[0]->box.min,
-                                            &rd->meshs[0]->box.max));
+  double d = camDistFactor * sqrt(VECT_DistanceSquare(&rd->meshs[0]->box.min,
+                                                      &rd->meshs[0]->box.max));
 
   static struct Vector cam_vect;
   static struct Vector cam_pos;
@@ -76,6 +88,7 @@ void mainFenetre() {
 
   struct hwindow *fenetre = HW_Init("Rendu 3D", rd->raster);
   HW_SetCallback(fenetre, EVENT_MOUSE, mouse_event);
+  HW_SetCallback(fenetre, EVENT_KEYBOARD, key_event);
   HW_Loop(fenetre, user_loop);
   HW_Close(fenetre);
 }
