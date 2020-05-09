@@ -384,7 +384,7 @@ static int computePlaneSegmentIntersection(const Vector segment[2],
   double t = numerateur / denominateur;
 
   // Si 0 <= t <= 1, on est sur le segment
-  if (t < 0 || t > 1)
+  if (t <= 0 || t >= 1)
     return 0;
 
   VECT_MultSca(&ab, &ab, t);
@@ -479,7 +479,7 @@ static void RD_DrawFace(struct Render *rd, const MeshFace *face) {
     VECT_Sub(&vectInside, &cubeInsidePoint, &facePoint);
     double faceDotProduct = VECT_DotProduct(&vectDirecteurFace, &vectInside);
 
-    printf("%d\n", cf);
+    // printf("%d\n", cf);
     for (unsigned p = 0; p < ARRLIST_GetSize(facePoints); p++) {
       Vector *currentPoint = ARRLIST_Get(facePoints, p);
 
@@ -494,26 +494,36 @@ static void RD_DrawFace(struct Render *rd, const MeshFace *face) {
           computePlaneSegmentIntersection(segment, cube[cf], &intersection);
 
       Vector vectCurrent;
-      VECT_Sub(&vectCurrent, currentPoint, &facePoint);
+      VECT_Sub(&vectCurrent, prevPoint, &facePoint);
+
+      /* printf("Current Point : ");
+       VECT_Print(currentPoint);
+       printf(", ");
+
+       printf("Prev Point : ");
+       VECT_Print(prevPoint);
+       printf("\n");*/
 
       if (VECT_DotProduct(&vectDirecteurFace, &vectCurrent) * faceDotProduct >=
           0) {
-        ARRLIST_Add(newFace, currentPoint);
+        // printf("Accepted current point !\n");
+        ARRLIST_Add(newFace, prevPoint);
       }
       if (hasIntersection) {
-        printf("Intersection : ");
-        VECT_Print(&intersection);
-        printf("\n");
-        printf("Face : ");
+        /*    printf("Intersection : ");
+            VECT_Print(&intersection);
+            printf("\n");*/
+        /*printf("Face : ");
         for (unsigned k = 0; k < 4; k++) {
           printf("P%u : ", k);
           VECT_Print(cube[cf][k]);
           printf(", ");
         }
-        printf("\n");
+        printf("\n");*/
         ARRLIST_Add(newFace, &intersection);
       }
     }
+    // getc(stdin);
 
     ARRLIST_Free(facePoints);
     facePoints = newFace;
@@ -527,10 +537,10 @@ static void RD_DrawFace(struct Render *rd, const MeshFace *face) {
     MeshVertex *a = MESH_VERT_Init(p.x, p.y, p.z);
     ARRLIST_Add(vertices, &a);
 
-    VECT_Print(&p);
-    printf(" || ");
+    // VECT_Print(&p);
+    // printf(" || ");
   }
-  printf("\n");
+  // printf("\n");
   ARRLIST_Free(facePoints);
 
   unsigned nbFaces = 0;
@@ -538,18 +548,23 @@ static void RD_DrawFace(struct Render *rd, const MeshFace *face) {
       MESH_FACE_FromVertices(ARRLIST_GetData(vertices),
                              ARRLIST_GetSize(vertices), &nbFaces, face->color);
 
-  printf("%u\n", nbFaces);
+  // printf("%u\n", nbFaces);
   for (unsigned i = 0; i < nbFaces; i++) {
     MeshFace *face = faces[i];
 
     RasterPos a = {face->p0->world.x, face->p0->world.y},
               b = {face->p1->world.x, face->p1->world.y},
               c = {face->p2->world.x, face->p2->world.y};
-    printf("(%u, %u) (%u, %u), (%u, %u) ; ", a.x, a.y, b.x, b.y, c.x, c.y);
+    // printf("(%u, %u) (%u, %u), (%u, %u) ; ", a.x, a.y, b.x, b.y, c.x, c.y);
     RASTER_DrawFillTriangle(rd->raster, &a, &b, &c, face->color);
   }
-  printf("\n");
+  // printf("\n");
+  for (unsigned i = 0; i < ARRLIST_GetSize(vertices); i++)
+    free(*(MeshVertex **)ARRLIST_Get(vertices, i));
   ARRLIST_Free(vertices);
+  for (unsigned i = 0; i < nbFaces; i++)
+    free(faces[i]);
+  free(faces);
 }
 
 /*
