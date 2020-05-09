@@ -460,7 +460,7 @@ extern void RD_DrawNormales(struct Render *rd) {
   }
 }
 
-extern void RD_DrawFbuffer(struct Render *rd) {
+extern void RD_DrawGbuffer(struct Render *rd) {
   for (size_t x = 0; x < rd->raster->xmax; x++) {
     for (size_t y = 0; y < rd->raster->ymax; y++) {
       MeshFace *f = *(MeshFace **)MATRIX_Edit(rd->fbuffer, x, y);
@@ -469,6 +469,21 @@ extern void RD_DrawFbuffer(struct Render *rd) {
                            CL_rgb(fabs(f->normal.x) * 255,
                                   fabs(f->normal.y) * 255,
                                   fabs(f->normal.z * 255)));
+    }
+  }
+}
+
+extern void RD_DrawFbufferWithLum(struct Render *rd, struct Vector *lv,
+                                  color lc) {
+  for (size_t x = 0; x < rd->raster->xmax; x++) {
+    for (size_t y = 0; y < rd->raster->ymax; y++) {
+      MeshFace *f = *(MeshFace **)MATRIX_Edit(rd->fbuffer, x, y);
+      if (f != NULL) {
+        double k = VECT_DotProduct(lv, &f->normal);
+        k = k < 0 ? 0 : k;
+        RASTER_DrawPixelxy(rd->raster, x, y,
+                           CL_rgb(k * lc.rgb.r, k * lc.rgb.g, k * lc.rgb.b));
+      }
     }
   }
 }

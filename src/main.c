@@ -70,8 +70,11 @@ void user_loop(unsigned int cpt) {
   RD_DrawFill(rd);
 
   RD_DrawZbuffer(rd);
-  // RD_RenderRaster(rd);
-  // RD_DrawZbuffTESTFUNC(rd);
+  RD_DrawGbuffer(rd);
+  Vector lum = {1, 1, 1};
+  VECT_Normalise(&lum);
+  RD_DrawFbufferWithLum(rd, &lum, CL_CHARTREUSE);
+
   // RD_DrawWireframe(rd);
   // RD_DrawVertices(rd);
   // RD_DrawNormales(rd);
