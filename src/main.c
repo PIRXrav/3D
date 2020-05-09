@@ -60,6 +60,8 @@ void user_loop(unsigned int cpt) {
   // RD_DrawVertices(rd);
   RD_DrawAxis(rd);
 
+  // Filtres vidéo
+  RASTER_Negate(rd->raster);
   // printf("\n================= CONFIG ===============\n");
   // RD_Print(rd);
   // getchar();

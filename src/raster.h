@@ -55,4 +55,6 @@ void RASTER_GenerateFillTriangle(RasterPos *p1, RasterPos *p2, RasterPos *p3,
                                                     void **),
                                  void **args);
 
+void RASTER_Negate(Matrix *s);
+
 #endif /* _RASTER_H_ */

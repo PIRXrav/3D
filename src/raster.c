@@ -61,6 +61,15 @@ extern void RASTER_DrawFill(Matrix *s, color c) {
   }
 }
 
+extern void RASTER_Negate(Matrix *s) {
+  for (uint32_t x = 0; x < s->xmax; x++) {
+    for (uint32_t y = 0; y < s->ymax; y++) {
+      *(color *)MATRIX_Edit(s, x, y) =
+          CL_Negate(*(color *)MATRIX_Edit(s, x, y));
+    }
+  }
+}
+
 extern void RASTER_DrawPixel(Matrix *s, RasterPos p, color c) {
   if (p.x < s->xmax && p.y < s->ymax)
     *(color *)MATRIX_Edit(s, p.x, p.y) = c;
