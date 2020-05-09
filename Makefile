@@ -8,6 +8,7 @@ OBJ=$(patsubst src/%.c,obj/%.o,$(SRC))
 DIRS=$(patsubst src/%,obj/%,$(shell find src/ -type d)) bin/tests obj/tests
 TESTS=$(wildcard tests/*.c)
 TEST_BINS=$(patsubst tests/%.c,bin/tests/%,$(TESTS))
+DISPLAY_IMAGE=feh
 
 all: $(DIRS) $(EXEC)
 
@@ -60,12 +61,21 @@ asset_venus:
 	gunzip /tmp/xxx.obj.gz
 	mv /tmp/xxx.obj  data/extern/venus.obj
 
+scripts/gprof2dot.py:
+	mkdir -p scripts
+	wget https://raw.githubusercontent.com/jrfonseca/gprof2dot/master/gprof2dot.py -O $@
+	chmod u+x $@
+
+graphs:
+	mkdir -p graphs
+
 profile: EXTRA_CFLAGS=-pg
 profile: EXTRA_LFLAGS=-pg
-profile: clean all
+profile: scripts/gprof2dot.py clean all
 	bin/main
-	@echo -e "\n\nPROFILE\n\n"
-	gprof bin/main
+	echo -e "\n\n"
+	gprof bin/main | scripts/gprof2dot.py | dot -Tpng -o graphs/profile-graph.png
+	$(DISPLAY_IMAGE) graphs/profile-graph.png
 
 clean:
 	rm -rf obj/

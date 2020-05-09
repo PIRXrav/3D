@@ -2,3 +2,5 @@ obj/
 bin/
 data/extern/
 gmon.out
+graphs
+scripts
