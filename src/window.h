@@ -41,6 +41,7 @@ struct event_keyboard_data {
 struct event_mouse_data {
   unsigned int x, y;
   unsigned int dx, dy;
+  int wheel;
   unsigned int released;
   enum mouse_bouton {
     BUTTON_NONE = 0,

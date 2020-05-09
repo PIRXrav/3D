@@ -345,29 +345,7 @@ extern void RD_CalcZbuffer(struct Render *rd) {
       void *args[2];
       args[0] = rd;
       args[1] = f;
-
-      /* Box3 box;
-       BOX3_Reset(&box);
-       Vector p1 = {0, 0, 0};
-       Vector p2 = {(double)rd->raster->xmax, (double)rd->raster->ymax,
-       10000.f}; BOX3_AddPoint(&box, &p1); BOX3_AddPoint(&box, &p2);*/
-
-      /*if (BOX3_IsPointInside(&box, &f->p0->sc) &&
-          BOX3_IsPointInside(&box, &f->p1->sc) &&
-          BOX3_IsPointInside(&box, &f->p2->sc)) {*/
       RD_ClipAndRasterFace(rd, f, callbackWriteZbuffer, args);
-      /*} else {*/
-      /*printf("ERR: ");
-      VECT_Print(&f->p0->sc);
-      VECT_Print(&f->p1->sc);
-      VECT_Print(&f->p2->sc);
-      printf("\n");
-      RASTER_POS_Print(&f->p0->screen);
-      RASTER_POS_Print(&f->p1->screen);
-      RASTER_POS_Print(&f->p2->screen);
-      // getchar();
-      printf("\n");*/
-      /* }*/
     }
   }
 }

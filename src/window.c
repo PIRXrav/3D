@@ -231,6 +231,12 @@ static void HW_EventLoop(struct hwindow *hw) {
       customEvent.data.mouse.y = event.motion.y;
       customEvent.data.mouse.button = mouseButtonFromSDL(event.motion.state);
       break;
+    case SDL_MOUSEWHEEL:
+      customEvent.type = EVENT_MOUSE;
+      customEvent.data.mouse.wheel =
+          event.wheel.y *
+          (event.wheel.direction == SDL_MOUSEWHEEL_NORMAL ? 1 : -1);
+      break;
     case SDL_MOUSEBUTTONUP:
       customEvent.data.mouse.released = 1;
       // fallthrough
