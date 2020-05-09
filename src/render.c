@@ -546,6 +546,7 @@ extern void RD_RenderRaster(struct Render *rd) {
 
 // TODO: opti : remplacer les allocations dynamiques par des tableaux statiques
 // avec comme taille le nombre maximum de sommets possibles (7 ?)
+// https://en.wikipedia.org/wiki/Sutherland%E2%80%93Hodgman_algorithm
 static void RD_ClipAndRasterFace(struct Render *rd, const MeshFace *face,
                                  void (*callback)(uint32_t, uint32_t, void **),
                                  void **args) {
