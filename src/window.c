@@ -49,7 +49,7 @@ struct hwindow {
   ArrayList *eventTypes;
   ArrayList *eventCallbacks;
   /* Buffer */
-  struct Raster *raster; // Pointeur vers le raster
+  Matrix /*(color)*/ *raster; // Pointeur vers le raster
   /* State */
   int run;
   double fps;
@@ -90,7 +90,8 @@ void HW_SendEvent(struct hwindow *hw, const struct event *event);
 /*
  *  Initialisation d'une fenetre
  */
-extern struct hwindow *HW_Init(const char *name, struct Raster *raster) {
+extern struct hwindow *HW_Init(const char *name, Matrix /*color*/ *raster) {
+  assert(!strcmp(raster->strtype, "color"));
   struct hwindow *ret = malloc(sizeof(struct hwindow));
   assert(ret);
 
@@ -194,8 +195,7 @@ extern inline unsigned int HW_GetY(struct hwindow *hw) { return hw->height; }
 static void HW_Render(struct hwindow *hw) {
   // SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
   // SDL_RenderClear(renderer);
-  SDL_UpdateTexture(hw->texture, NULL, hw->raster->screen,
-                    hw->raster->xmax * 4);
+  SDL_UpdateTexture(hw->texture, NULL, hw->raster->data, hw->raster->xmax * 4);
   SDL_RenderCopy(hw->renderer, hw->texture, NULL, NULL);
   SDL_RenderPresent(hw->renderer);
 }

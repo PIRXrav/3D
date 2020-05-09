@@ -36,7 +36,7 @@ struct tty {
   uint32_t bufferSize;
   /* Raster */
   uint32_t width, height;
-  struct Raster *raster; // Pointeur vers le raster
+  Matrix *raster; // Pointeur vers le raster
   /* State */
   int run;
   uint32_t cpt;
@@ -81,7 +81,7 @@ static int halted = 0;
 /*
  *  Initialisation d'un terminal
  */
-extern struct tty *TTY_Init(struct Raster *raster) {
+extern struct tty *TTY_Init(Matrix *raster) {
   struct tty *tty = malloc(sizeof(struct tty));
 
   tty->buffer = NULL;

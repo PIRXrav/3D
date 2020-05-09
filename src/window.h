@@ -78,7 +78,7 @@ typedef void (*event_callback)(const struct event *data);
 /*
  *  Initialisation d'une fenetre
  */
-struct hwindow *HW_Init(const char *name, struct Raster *raster);
+struct hwindow *HW_Init(const char *name, Matrix *raster);
 /*
  *  Fermeture d'une fenetre
  */

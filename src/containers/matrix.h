@@ -1,12 +1,12 @@
-#ifndef _TERMINAL_H_
-#define _TERMINAL_H_
+#ifndef _MATRIX_H_
+#define _MATRIX_H_
 
 /*******************************************************************************
  * Includes
  ******************************************************************************/
-#include "containers/matrix.h"
-#include "raster.h"
+
 #include <stdint.h>
+#include <stdlib.h>
 
 /*******************************************************************************
  * Macros
@@ -16,6 +16,16 @@
  * Types
  ******************************************************************************/
 
+struct Matrix {
+  uint32_t xmax;
+  uint32_t ymax;
+  void *data;
+  size_t elemsize;
+  char *strtype;
+};
+
+typedef struct Matrix Matrix;
+
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -24,38 +34,9 @@
  * Prototypes
  ******************************************************************************/
 
-/*
- *  Initialisation d'un terminal
- */
-struct tty *TTY_Init(Matrix *raster);
-/*
- *  Fermeture d'un terminal
- */
-void TTY_Close(struct tty *tty);
+Matrix *MATRIX_Init(uint32_t xmax, uint32_t ymax, uint32_t elemsize, char *ss);
+void *MATRIX_Edit(Matrix *m, uint32_t x, uint32_t y);
+void MATRIX_Clear(Matrix *m);
+void MATRIX_Free(Matrix *m);
 
-/*
- *  Lancement du loop d'affichage
- */
-void TTY_Loop(struct tty *tty, void (*userfunc)(unsigned int));
-
-/*
- * Affichage des informations de debug
- */
-void TTY_Print(struct tty *tty);
-
-/*
- *  get largeur d'affichage terminal
- */
-uint32_t TTY_GetW(struct tty *tty);
-
-/*
- *  get hauteur d'affichage du terminal
- */
-uint32_t TTY_GetH(struct tty *tty);
-
-/*
- * Recupere la taille reelle du terminal
- */
-void TTY_QuerySize(uint32_t *w, uint32_t *h);
-
-#endif /* _TERMINAL_H */
+#endif /* _MATRIX_H_ */

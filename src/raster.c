@@ -53,53 +53,40 @@ void RP_Cpy(RasterPos *p1, RasterPos *p2) {
   p1->y = p2->y;
 }
 
-extern struct Raster *RASTER_Init(uint32_t xmax, uint32_t ymax) {
-  struct Raster *s = malloc(sizeof(struct Raster));
-  assert(s);
-  s->screen = malloc(sizeof(color) * xmax * ymax);
-  assert(s->screen);
-  s->xmax = xmax;
-  s->ymax = ymax;
-
-  return s;
-}
-
-extern void RASTER_DrawFill(struct Raster *s, color c) {
+extern void RASTER_DrawFill(Matrix *s, color c) {
   for (uint32_t x = 0; x < s->xmax; x++) {
     for (uint32_t y = 0; y < s->ymax; y++) {
-      s->screen[y * s->xmax + x] = c;
+      *(color *)MATRIX_Edit(s, x, y) = c;
     }
   }
 }
 
-extern void RASTER_DrawPixel(struct Raster *s, RasterPos p, color c) {
+extern void RASTER_DrawPixel(Matrix *s, RasterPos p, color c) {
   if (p.x < s->xmax && p.y < s->ymax)
-    s->screen[p.y * s->xmax + p.x] = c;
+    *(color *)MATRIX_Edit(s, p.x, p.y) = c;
 }
 
-extern void RASTER_DrawPixelxy(struct Raster *s, uint32_t x, uint32_t y,
-                               color c) {
+extern void RASTER_DrawPixelxy(Matrix *s, uint32_t x, uint32_t y, color c) {
   if (x < s->xmax && y < s->ymax)
-    s->screen[y * s->xmax + x] = c;
+    *(color *)MATRIX_Edit(s, x, y) = c;
 }
 
-extern color RASTER_GetPixel(struct Raster *s, RasterPos p) {
+extern color RASTER_GetPixel(Matrix *s, RasterPos p) {
   if (p.x < s->xmax && p.y < s->ymax)
-    return s->screen[p.y * s->xmax + p.x];
+    return *(color *)MATRIX_Edit(s, p.x, p.y);
   return CL_BLACK;
 }
 
-extern color RASTER_GetPixelxy(struct Raster *s, uint32_t x, uint32_t y) {
+extern color RASTER_GetPixelxy(Matrix *s, uint32_t x, uint32_t y) {
   if (x < s->xmax && y < s->ymax)
-    return s->screen[y * s->xmax + x];
+    return *(color *)MATRIX_Edit(s, x, y);
   return CL_BLACK;
 }
 
 /*
  * https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
  */
-extern void RASTER_DrawLine(struct Raster *s, RasterPos *p0, RasterPos *p1,
-                            color c) {
+extern void RASTER_DrawLine(Matrix *s, RasterPos *p0, RasterPos *p1, color c) {
   int32_t x0 = p0->x, x1 = p1->x, y0 = p0->y, y1 = p1->y, dx, dy, sx, sy, err,
           e2;
   dx = abs(x1 - x0);
@@ -123,7 +110,7 @@ extern void RASTER_DrawLine(struct Raster *s, RasterPos *p0, RasterPos *p1,
   }
 }
 
-extern void RASTER_DrawTriangle(struct Raster *s, RasterPos *p1, RasterPos *p2,
+extern void RASTER_DrawTriangle(Matrix *s, RasterPos *p1, RasterPos *p2,
                                 RasterPos *p3, color c) {
   RASTER_DrawLine(s, p1, p2, c);
   RASTER_DrawLine(s, p2, p3, c);
@@ -179,7 +166,7 @@ RASTER_GenerateFillTriangle(RasterPos *p1, RasterPos *p2, RasterPos *p3,
   }
 }
 
-extern void RASTER_DrawCircle(struct Raster *s, RasterPos *p, int r, color c) {
+extern void RASTER_DrawCircle(Matrix *s, RasterPos *p, int r, color c) {
   int xc = p->x;
   int yc = p->y;
   int x = 0;

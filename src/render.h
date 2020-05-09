@@ -6,6 +6,7 @@
  ******************************************************************************/
 
 #include "color.h"
+#include "containers/matrix.h"
 #include "geo.h"
 #include "mesh.h"
 
@@ -52,7 +53,7 @@ struct Render {
   double scalex, scaley; // relations à la taille de l'écran
 
   /* Ecran */
-  struct Raster *raster; // Rendu de la scene 2D matrix
+  Matrix *raster; // Rendu de la scene 2D matrix
 };
 
 /*******************************************************************************

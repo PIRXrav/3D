@@ -170,7 +170,7 @@ extern struct Render *RD_Init(unsigned int xmax, unsigned int ymax) {
   ret->nb_meshs = 0;
   ret->meshs = malloc(sizeof(struct mesh *) * ret->nb_meshs);
   assert(ret->meshs);
-  ret->raster = RASTER_Init(xmax, ymax);
+  ret->raster = MATRIX_Init(xmax, ymax, sizeof(color), "color");
 
   // Repere
   VECT_Cpy(&ret->p0.world, &VECT_0);
@@ -255,6 +255,10 @@ extern void RD_DrawWireframe(struct Render *rd) {
   }
 }
 
+/*
+ *
+ * https://codeplea.com/triangular-interpolation?fbclid=IwAR38TFpipmfuQ5bM2P0Y07eym1ZHlt7-ZlcZAnEIb7EeOYU3uJzqWxuK0Ws
+ */
 void TESTDRAW(uint32_t x, uint32_t y, void **args) {
 
   Vector *p1 = &((struct MeshFace *)args[1])->p0->sc;
