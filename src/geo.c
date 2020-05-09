@@ -97,7 +97,9 @@ float VECT_Distance(const struct Vector *a, const struct Vector *b) {
 /*
  * Affichage vecteur
  */
-void VECT_Print(struct Vector *a) { printf("{%f, %f, %f}", a->x, a->y, a->z); }
+void VECT_Print(const struct Vector *a) {
+  printf("{%f, %f, %f}", a->x, a->y, a->z);
+}
 
 /*
  * Somme vecteur : a := a + b

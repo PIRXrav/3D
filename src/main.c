@@ -56,8 +56,10 @@ void user_loop(unsigned int cpt) {
   // Rendu
   // RD_DrawRaytracing(rd);
   RD_DrawFill(rd);
+
   RD_DrawZbuffer(rd);
-  RD_DrawFbuffer(rd);
+  // RD_RenderRaster(rd);
+  // RD_DrawZbuffTESTFUNC(rd);
   // RD_DrawWireframe(rd);
   // RD_DrawVertices(rd);
   // RD_DrawNormales(rd);

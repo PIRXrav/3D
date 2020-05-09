@@ -52,6 +52,9 @@ void RASTER_DrawTriangle(Matrix *s, RasterPos *p1, RasterPos *p2, RasterPos *p3,
 
 void RASTER_DrawCircle(Matrix *s, RasterPos *p, int r, color c);
 
+void RASTER_DrawFillTriangle(Matrix *s, RasterPos *p1, RasterPos *p2,
+                             RasterPos *p3, color c);
+
 void RASTER_GenerateFillTriangle(RasterPos *p1, RasterPos *p2, RasterPos *p3,
                                  void (*callbackxy)(uint32_t, uint32_t,
                                                     void **),
