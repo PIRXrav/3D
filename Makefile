@@ -8,7 +8,7 @@ OBJ=$(patsubst src/%.c,obj/%.o,$(SRC))
 DIRS=$(patsubst src/%,obj/%,$(shell find src/ -type d)) bin/tests obj/tests
 TESTS=$(wildcard tests/*.c)
 TEST_BINS=$(patsubst tests/%.c,bin/tests/%,$(TESTS))
-DISPLAY_IMAGE=feh
+DISPLAY_IMAGE=$(shell which tycat 2> /dev/null||which viewnior 2>/dev/null || which eog 2>/dev/null || which display 2>/dev/null || which feh 2>/dev/null)
 
 all: $(DIRS) $(EXEC)
 
