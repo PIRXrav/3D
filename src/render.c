@@ -34,7 +34,9 @@ static void calcNormaleFace(struct MeshFace *f);
 static int computePlaneSegmentIntersection(const Vector segment[2],
                                            const Vector **facePoints,
                                            Vector *intersection);
-static void RD_DrawFace(struct Render *rd, const MeshFace *face);
+static void RD_ClipAndRasterFace(struct Render *rd, const MeshFace *face,
+                                 void (*callback)(uint32_t, uint32_t, void **),
+                                 void **args);
 
 /*
  * Calcule d'une raie
@@ -339,30 +341,28 @@ extern void RD_CalcZbuffer(struct Render *rd) {
       args[0] = rd;
       args[1] = f;
 
-      Box3 box;
-      BOX3_Reset(&box);
-      Vector p1 = {0, 0, 0};
-      Vector p2 = {(double)rd->raster->xmax, (double)rd->raster->ymax, 10000.f};
-      BOX3_AddPoint(&box, &p1);
-      BOX3_AddPoint(&box, &p2);
+      /* Box3 box;
+       BOX3_Reset(&box);
+       Vector p1 = {0, 0, 0};
+       Vector p2 = {(double)rd->raster->xmax, (double)rd->raster->ymax,
+       10000.f}; BOX3_AddPoint(&box, &p1); BOX3_AddPoint(&box, &p2);*/
 
-      if (BOX3_IsPointInside(&box, &f->p0->sc) &&
+      /*if (BOX3_IsPointInside(&box, &f->p0->sc) &&
           BOX3_IsPointInside(&box, &f->p1->sc) &&
-          BOX3_IsPointInside(&box, &f->p2->sc)) {
-        RASTER_GenerateFillTriangle(&f->p0->screen, &f->p1->screen,
-                                    &f->p2->screen, callbackWriteZbuffer, args);
-      } else {
-        /*printf("ERR: ");
-        VECT_Print(&f->p0->sc);
-        VECT_Print(&f->p1->sc);
-        VECT_Print(&f->p2->sc);
-        printf("\n");
-        RASTER_POS_Print(&f->p0->screen);
-        RASTER_POS_Print(&f->p1->screen);
-        RASTER_POS_Print(&f->p2->screen);
-        // getchar();
-        printf("\n");*/
-      }
+          BOX3_IsPointInside(&box, &f->p2->sc)) {*/
+      RD_ClipAndRasterFace(rd, f, callbackWriteZbuffer, args);
+      /*} else {*/
+      /*printf("ERR: ");
+      VECT_Print(&f->p0->sc);
+      VECT_Print(&f->p1->sc);
+      VECT_Print(&f->p2->sc);
+      printf("\n");
+      RASTER_POS_Print(&f->p0->screen);
+      RASTER_POS_Print(&f->p1->screen);
+      RASTER_POS_Print(&f->p2->screen);
+      // getchar();
+      printf("\n");*/
+      /* }*/
     }
   }
 }
@@ -513,18 +513,27 @@ static int computePlaneSegmentIntersection(const Vector segment[2],
   return 1;
 }
 
+static void callbackDrawXY(uint32_t x, uint32_t y, void **args) {
+  Matrix *s = args[0];
+  color c = *(color *)args[1];
+  RASTER_DrawPixelxy(s, x, y, c);
+}
+
 extern void RD_RenderRaster(struct Render *rd) {
   for (unsigned i = 0; i < rd->nb_meshs; i++) {
     struct Mesh *mesh = rd->meshs[i];
     for (unsigned j = 0; j < MESH_GetNbFace(mesh); j++) {
-      RD_DrawFace(rd, MESH_GetFace(mesh, j));
+      void *args[2] = {rd->raster, &MESH_GetFace(mesh, j)->color};
+      RD_ClipAndRasterFace(rd, MESH_GetFace(mesh, j), callbackDrawXY, args);
     }
   }
 }
 
 // TODO: opti : remplacer les allocations dynamiques par des tableaux statiques
 // avec comme taille le nombre maximum de sommets possibles (7 ?)
-static void RD_DrawFace(struct Render *rd, const MeshFace *face) {
+static void RD_ClipAndRasterFace(struct Render *rd, const MeshFace *face,
+                                 void (*callback)(uint32_t, uint32_t, void **),
+                                 void **args) {
 
   /* Pseudo code
    *
@@ -545,16 +554,16 @@ static void RD_DrawFace(struct Render *rd, const MeshFace *face) {
    *    face = newFace;
    * }
    */
-  double far = 100000;
+  double near = 0.01, far = 100000;
   // Sommets du cube face avant, face arriere, on commence en haut a gauche,
   // sens trigo
   Vector cubeVertices[8] = {{0, 0, 0}, {0, 1, 0}, {1, 1, 0}, {1, 0, 0},
                             {0, 0, 1}, {0, 1, 1}, {1, 1, 1}, {1, 0, 1}};
 
   for (unsigned i = 0; i < 8; i++) {
-    cubeVertices[i].x *= rd->raster->xmax;
-    cubeVertices[i].y *= rd->raster->ymax;
-    cubeVertices[i].z *= far;
+    cubeVertices[i].x *= rd->raster->xmax - 1;
+    cubeVertices[i].y *= rd->raster->ymax - 1;
+    cubeVertices[i].z = (i < 4 ? near : far);
   }
 
   // Cube de projection (seuls les 3 premiers sommets sont utilises mais
@@ -677,7 +686,7 @@ static void RD_DrawFace(struct Render *rd, const MeshFace *face) {
               b = {face->p1->world.x, face->p1->world.y},
               c = {face->p2->world.x, face->p2->world.y};
     // printf("(%u, %u) (%u, %u), (%u, %u) ; ", a.x, a.y, b.x, b.y, c.x, c.y);
-    RASTER_DrawFillTriangle(rd->raster, &a, &b, &c, face->color);
+    RASTER_GenerateFillTriangle(&a, &b, &c, callback, args);
   }
   // printf("\n");
   for (unsigned i = 0; i < ARRLIST_GetSize(vertices); i++)
