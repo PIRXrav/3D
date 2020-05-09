@@ -41,6 +41,8 @@ void key_event(const struct event *event) {
 }
 
 void user_loop(unsigned int cpt) {
+  cpt++;
+
   static double angle = 7.1;
   struct Vector *barycentre = &rd->meshs[0]->box.center;
   double d = camDistFactor * sqrt(VECT_DistanceSquare(&rd->meshs[0]->box.min,
@@ -63,19 +65,18 @@ void user_loop(unsigned int cpt) {
   // Mise a jour des objets
   RD_CalcProjectionVertices(rd); // Calcul des projections
   RD_CalcZbuffer(rd);            // Calcul du Z buffer
-  RD_CalcNormales(rd);
   RD_calcCacheBarycentres(rd);
+  RD_CalcNormales(rd);
 
   // Rendu
   // RD_DrawRaytracing(rd);
   RD_DrawFill(rd);
 
-  // RD_DrawZbuffer(rd);
-  RD_DrawGbuffer(rd);
+  RD_DrawZbuffer(rd);
+  // RD_DrawGbuffer(rd);
   Vector lum = {1, 1, 1};
   VECT_Normalise(&lum);
   // RD_DrawFbufferWithLum(rd, &lum, CL_CHARTREUSE);
-
   // RD_DrawWireframe(rd);
   // RD_DrawVertices(rd);
   // RD_DrawNormales(rd);

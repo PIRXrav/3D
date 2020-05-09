@@ -115,9 +115,10 @@ void RD_DrawAxis(struct Render *rd);
 void RD_DrawFill(struct Render *rd);
 void RD_DrawNormales(struct Render *rd);
 void RD_DrawGbuffer(struct Render *rd);
-extern void RD_DrawFbufferWithLum(struct Render *rd, struct Vector *lv,
-                                  color lc);
+void RD_DrawZbuffer(struct Render *rd);
+void RD_DrawFbufferWithLum(struct Render *rd, struct Vector *lv, color lc);
 
+void RD_CalcZbuffer(struct Render *rd);
 void RD_CalcProjectionVertices(struct Render *rd);
 void RD_CalcNormales(struct Render *rd);
 void RD_calcCacheBarycentres(struct Render *rd);

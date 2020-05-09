@@ -278,12 +278,11 @@ extern void RD_calcCacheBarycentres(struct Render *rd) {
  */
 static void callbackWriteZbuffer(uint32_t x, uint32_t y, void **args) {
 
+  // Args
   MeshFace *f = (struct MeshFace *)args[1];
-  Vector *p1 = &f->p0->sc;
-  Vector *p2 = &f->p1->sc;
-  Vector *p3 = &f->p2->sc;
   struct Render *rd = (struct Render *)args[0];
 
+  // Check args
   assert(x < rd->zbuffer->xmax || y < rd->zbuffer->ymax);
 
   // to INT
@@ -311,14 +310,14 @@ static void callbackWriteZbuffer(uint32_t x, uint32_t y, void **args) {
   w2 /= sum;
   w3 /= sum;
 
-  double z4 = w1 * p1->z + w2 * p2->z + w3 * p3->z;
+  double z4 = w1 * f->p0->sc.z + w2 * f->p1->sc.z + w3 * f->p2->sc.z;
 
   if (z4 > 1000000000 || z4 < 0 || isnan(z4)) {
     printf("Z = %f\n", z4);
     printf("w1 = %f, w2 = %f, w3 = %f\n", w1, w2, w3);
-    VECT_Print(p1);
-    VECT_Print(p2);
-    VECT_Print(p3);
+    VECT_Print(&f->p0->sc);
+    VECT_Print(&f->p1->sc);
+    VECT_Print(&f->p2->sc);
     printf("\n");
     assert(0);
   }
@@ -452,7 +451,7 @@ extern void RD_DrawZbuffer(struct Render *rd) {
 
 extern void RD_DrawNormales(struct Render *rd) {
   Mesh *mesh;
-  MeshVertex b0, b1;
+  MeshVertex b1; // b0
   for (unsigned int i_mesh = 0; i_mesh < rd->nb_meshs; i_mesh++) {
     mesh = rd->meshs[i_mesh];
     for (unsigned int i = 0; i < MESH_GetNbFace(mesh); i++) {
@@ -472,9 +471,9 @@ extern void RD_DrawGbuffer(struct Render *rd) {
       MeshFace *f = *(MeshFace **)MATRIX_Edit(rd->fbuffer, x, y);
       if (f != NULL)
         RASTER_DrawPixelxy(rd->raster, x, y,
-                           CL_rgb(fabs(f->normal.x) * 255,
-                                  fabs(f->normal.y) * 255,
-                                  fabs(f->normal.z * 255)));
+                           CL_rgb(abs((int)(f->normal.x * 255)),
+                                  abs((int)(f->normal.y * 255)),
+                                  abs((int)(f->normal.z * 255))));
     }
   }
 }
