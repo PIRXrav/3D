@@ -183,6 +183,22 @@ extern void MESH_Print(const Mesh *mesh) {
   }
 }
 
+extern void MESH_CalcVerticesNormales(Mesh *mesh) {
+  static MeshVertex *v;
+  static MeshFace *f;
+  for (size_t iv = 0; iv < MESH_GetNbVertice(mesh); iv++) {
+    v = MESH_GetVertex(mesh, iv);
+    uint32_t cpt = 0;
+    VECT_Cpy(&v->normal, &VECT_0);
+    // On somme les normales des faces qui contiennent v;
+    for (size_t i = 0; i < MESH_GetNbFace(mesh); i++) {
+      f = MESH_GetFace(mesh, i);
+      if (v == f->p0 || v == f->p1 || v == f->p2)
+        VECT_Add(&v->normal, &v->normal, &f->normal);
+    }
+    VECT_Normalise(&v->normal);
+  }
+}
 /*
  * Translate le mesh suivant le vecteur depl
  */
@@ -191,6 +207,14 @@ void MESH_Translate(struct Mesh *mesh, struct Vector *depl) {
   ; // TODO
 }
 */
+
+extern void MESH_FACE_CalcNormaleFace(struct MeshFace *f) {
+  Vector s21, s31;
+  VECT_Sub(&s21, &f->p1->world, &f->p0->world);
+  VECT_Sub(&s31, &f->p2->world, &f->p0->world);
+  VECT_CrossProduct(&f->normal, &s21, &s31);
+  VECT_Normalise(&f->normal);
+}
 
 /*******************************************************************************
  * Internal function

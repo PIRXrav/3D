@@ -28,6 +28,7 @@ struct MeshVertex {
   Vector cam;       // Coordonnées repere camera
   Vector sc;        // Coordonnées dans l'écran 3
   RasterPos screen; // Dans ecran 2
+  Vector normal;    // Normale du sommet
 };
 
 typedef struct MeshFace MeshFace;
@@ -72,10 +73,11 @@ extern MeshFace *MESH_FACE_Set(MeshFace *mf, MeshVertex *p0, MeshVertex *p1,
                                MeshVertex *p2, color c);
 extern MeshFace *MESH_FACE_Init(MeshVertex *p1, MeshVertex *p2, MeshVertex *p3,
                                 color c);
+extern void MESH_FACE_Print(struct MeshFace *face);
+extern void MESH_FACE_CalcNormaleFace(struct MeshFace *f);
 extern MeshFace **MESH_FACE_FromVertices(MeshVertex **vertices,
                                          unsigned nbVertices, unsigned *nbFaces,
                                          color c);
-extern void MESH_FACE_Print(struct MeshFace *face);
 
 // Mesh
 extern Mesh *MESH_Init(void);
@@ -89,5 +91,7 @@ extern MeshFace *MESH_AddFace(Mesh *mesh, MeshFace *face);
 extern void MESH_SetName(Mesh *mesh, const char *name);
 extern Mesh *MESH_InitTetrahedron(MeshVertex *origin);
 extern void MESH_Print(const Mesh *mesh);
+
+extern void MESH_CalcVerticesNormales(Mesh *mesh);
 
 #endif /* _GEO_H_ */

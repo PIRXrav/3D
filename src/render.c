@@ -32,8 +32,6 @@
 
 static void calcProjectionVertex3(struct Render *rd, struct MeshVertex *p);
 
-static void calcNormaleFace(struct MeshFace *f);
-
 static void calcCacheBarycentreFace(struct MeshFace *f);
 
 static void calcWbarycentre(struct MeshFace *f, uint32_t x, uint32_t y,
@@ -258,9 +256,12 @@ extern void RD_CalcNormales(struct Render *rd) {
   Mesh *mesh;
   for (unsigned int i_mesh = 0; i_mesh < rd->nb_meshs; i_mesh++) {
     mesh = rd->meshs[i_mesh];
+    // Calcul des normales de face
     for (unsigned int i = 0; i < MESH_GetNbFace(mesh); i++) {
-      calcNormaleFace(MESH_GetFace(mesh, i));
+      MESH_FACE_CalcNormaleFace(MESH_GetFace(mesh, i));
     }
+    // Calcul des normales de sommets
+    MESH_CalcVerticesNormales(mesh);
   }
 }
 
@@ -421,14 +422,25 @@ extern void RD_DrawNormales(struct Render *rd) {
 }
 
 extern void RD_DrawGbuffer(struct Render *rd) {
+  Vector normal;
+  Vector w;
   for (size_t x = 0; x < rd->raster->xmax; x++) {
     for (size_t y = 0; y < rd->raster->ymax; y++) {
       MeshFace *f = *(MeshFace **)MATRIX_Edit(rd->fbuffer, x, y);
-      if (f != NULL)
+      if (f != NULL) {
+        calcWbarycentre(f, x, y, &w);
+        normal.x = f->p0->normal.x * w.x + f->p1->normal.x * w.y +
+                   f->p2->normal.x * w.z;
+        normal.y = f->p0->normal.y * w.x + f->p1->normal.y * w.y +
+                   f->p2->normal.y * w.z;
+        normal.z = f->p0->normal.z * w.x + f->p1->normal.z * w.y +
+                   f->p2->normal.z * w.z;
+        VECT_Normalise(&normal);
         RASTER_DrawPixelxy(rd->raster, x, y,
-                           CL_rgb(abs((int)(f->normal.x * 255)),
-                                  abs((int)(f->normal.y * 255)),
-                                  abs((int)(f->normal.z * 255))));
+                           CL_rgb(abs((int)(normal.x * 255)),
+                                  abs((int)(normal.y * 255)),
+                                  abs((int)(normal.z * 255))));
+      }
     }
   }
 }
@@ -648,14 +660,6 @@ static void calcProjectionVertex3(struct Render *rd, struct MeshVertex *p) {
   p->screen.x = (int32_t)p->sc.x;
   p->screen.y = (int32_t)p->sc.y;
   // printf("ps :[%d, %d]\n", ps.x, ps.y);
-}
-
-static void calcNormaleFace(struct MeshFace *f) {
-  Vector s21, s31;
-  VECT_Sub(&s21, &f->p1->world, &f->p0->world);
-  VECT_Sub(&s31, &f->p2->world, &f->p0->world);
-  VECT_CrossProduct(&f->normal, &s21, &s31);
-  VECT_Normalise(&f->normal);
 }
 
 static void calcCacheBarycentreFace(struct MeshFace *f) {

@@ -70,14 +70,13 @@ void user_loop(unsigned int cpt) {
   RD_CalcProjectionVertices(rd); // Calcul des projections
   RD_CalcZbuffer(rd);            // Calcul du Z buffer
   RD_calcCacheBarycentres(rd);
-  RD_CalcNormales(rd);
 
   // Rendu
   // RD_DrawRaytracing(rd);
   RD_DrawFill(rd);
 
-  RD_DrawZbuffer(rd);
-  // RD_DrawGbuffer(rd);
+  // RD_DrawZbuffer(rd);
+  RD_DrawGbuffer(rd);
   Vector lum = {1, 1, 1};
   VECT_Normalise(&lum);
   // RD_DrawFbufferWithLum(rd, &lum, CL_CHARTREUSE);
@@ -166,6 +165,8 @@ int main(int argc, char **argv) {
   printf("Loaded %u meshs !\n", nbMeshes);
   for (unsigned i = 0; i < nbMeshes; i++)
     RD_AddMesh(rd, meshes[i]);
+
+  RD_CalcNormales(rd);
 
   /**
   RD_Print(rd);
