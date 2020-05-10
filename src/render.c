@@ -36,6 +36,9 @@ static void calcNormaleFace(struct MeshFace *f);
 
 static void calcCacheBarycentreFace(struct MeshFace *f);
 
+static void calcWbarycentre(struct MeshFace *f, uint32_t x, uint32_t y,
+                            Vector *outW);
+
 static int computePlaneSegmentIntersection(const Vector segment[2],
                                            const Vector **facePoints,
                                            Vector *intersection);
@@ -113,7 +116,6 @@ extern bool RD_RayCastOnRD(const struct Render *rd, const struct Vector *ray,
  */
 extern color RD_RayTraceOnRD(const struct Render *rd, const struct Vector *ray,
                              struct Vector *x) {
-
   struct Mesh *mesh = NULL;
   struct MeshFace *face = NULL;
   if (RD_RayCastOnRD(rd, ray, x, &mesh, &face)) {
@@ -130,7 +132,6 @@ extern color RD_RayTraceOnRD(const struct Render *rd, const struct Vector *ray,
 void RD_SetCam(struct Render *rd, const struct Vector *cam_pos,
                const struct Vector *cam_forward,
                const struct Vector *cam_up_world) {
-
   // Mise a jout des variables maitresses
   if (cam_pos != NULL)
     VECT_Cpy(&rd->cam_pos, cam_pos);
@@ -277,7 +278,6 @@ extern void RD_calcCacheBarycentres(struct Render *rd) {
  * https://codeplea.com/triangular-interpolation?fbclid=IwAR38TFpipmfuQ5bM2P0Y07eym1ZHlt7-ZlcZAnEIb7EeOYU3uJzqWxuK0Ws
  */
 static void callbackWriteZbuffer(uint32_t x, uint32_t y, void **args) {
-
   // Args
   MeshFace *f = (struct MeshFace *)args[1];
   struct Render *rd = (struct Render *)args[0];
@@ -285,36 +285,13 @@ static void callbackWriteZbuffer(uint32_t x, uint32_t y, void **args) {
   // Check args
   assert(x < rd->zbuffer->xmax || y < rd->zbuffer->ymax);
 
-  // to INT
-  /*
-  p1->x = (double)(int)(p1->x);
-  p1->y = (double)(int)(p1->y);
-
-  p2->x = (double)(int)(p2->x);
-  p2->y = (double)(int)(p2->y);
-
-  p3->x = (double)(int)(p3->x);
-  p3->y = (double)(int)(p3->y);
-  */
-
-  double w1 = f->wp1 * (x - f->p2->sc.x) + f->wp2 * (y - f->p2->sc.y);
-  double w2 = f->wp3 * (x - f->p2->sc.x) + f->wp4 * (y - f->p2->sc.y);
-  double w3 = 1 - w1 - w2;
-
-  w1 = w1 > 0 ? w1 : 0;
-  w2 = w2 > 0 ? w2 : 0;
-  w3 = w3 > 0 ? w3 : 0;
-
-  double sum = (w1 + w2 + w3);
-  w1 /= sum;
-  w2 /= sum;
-  w3 /= sum;
-
-  double z4 = w1 * f->p0->sc.z + w2 * f->p1->sc.z + w3 * f->p2->sc.z;
+  static struct Vector w; // C'est plus un triplet de 3 coefs qu'un vector
+  calcWbarycentre(f, x, y, &w);
+  double z4 = w.x * f->p0->sc.z + w.y * f->p1->sc.z + w.z * f->p2->sc.z;
 
   if (z4 > 1000000000 || z4 < 0 || isnan(z4)) {
     printf("Z = %f\n", z4);
-    printf("w1 = %f, w2 = %f, w3 = %f\n", w1, w2, w3);
+    printf("w1 = %f, w2 = %f, w3 = %f\n", w.x, w.y, w.z);
     VECT_Print(&f->p0->sc);
     VECT_Print(&f->p1->sc);
     VECT_Print(&f->p2->sc);
@@ -527,13 +504,12 @@ extern void RD_RenderRaster(struct Render *rd) {
   }
 }
 
-// TODO: opti : remplacer les allocations dynamiques par des tableaux statiques
-// avec comme taille le nombre maximum de sommets possibles (7 ?)
+// TODO: opti : remplacer les allocations dynamiques par des tableaux
+// statiques avec comme taille le nombre maximum de sommets possibles (7 ?)
 // https://en.wikipedia.org/wiki/Sutherland%E2%80%93Hodgman_algorithm
 static void RD_ClipAndRasterFace(struct Render *rd, const MeshFace *face,
                                  void (*callback)(uint32_t, uint32_t, void **),
                                  void **args) {
-
   /* Pseudo code
    *
    * for (cube_face in projection_cube) {
@@ -698,4 +674,21 @@ static void calcCacheBarycentreFace(struct MeshFace *f) {
   f->wp3 = (f->p2->sc.y - f->p0->sc.y) / denum;
   f->wp2 = (f->p2->sc.x - f->p1->sc.x) / denum;
   f->wp4 = (f->p0->sc.x - f->p2->sc.x) / denum;
+}
+
+// Retourne les 3 coefficients du point par rapport au triangle
+static void calcWbarycentre(struct MeshFace *f, uint32_t x, uint32_t y,
+                            Vector *outW) {
+  outW->x = f->wp1 * (x - f->p2->sc.x) + f->wp2 * (y - f->p2->sc.y);
+  outW->y = f->wp3 * (x - f->p2->sc.x) + f->wp4 * (y - f->p2->sc.y);
+  outW->z = 1 - outW->x - outW->y;
+
+  outW->x = outW->x > 0 ? outW->x : 0;
+  outW->y = outW->y > 0 ? outW->y : 0;
+  outW->z = outW->z > 0 ? outW->z : 0;
+
+  double sum = (outW->x + outW->y + outW->z);
+  outW->x /= sum;
+  outW->y /= sum;
+  outW->z /= sum;
 }

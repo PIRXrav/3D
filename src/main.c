@@ -167,6 +167,12 @@ int main(int argc, char **argv) {
   for (unsigned i = 0; i < nbMeshes; i++)
     RD_AddMesh(rd, meshes[i]);
 
+  /**
+  RD_Print(rd);
+  printf("\nPress enter to continue \n");
+  getchar();
+  */
+
   switch (mode) {
   case MODE_SDL2:
     mainFenetre();
