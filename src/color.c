@@ -45,6 +45,8 @@ color CL_Mix(color c1, color c2, float factor) {
                  c1.rgb.a * (1 - factor) + c2.rgb.a * factor);
 }
 
+unsigned CL_Brightness(color c) { return (c.rgb.r + c.rgb.g + c.rgb.b) / 3; }
+
 /*******************************************************************************
  * Internal function
  ******************************************************************************/

@@ -103,7 +103,7 @@ void mainFenetre() {
 
 void mainTerm() {
 
-  struct tty *tty = TTY_Init(rd->raster);
+  struct tty *tty = TTY_Init(rd->raster, TTY_RENDER_ASCII);
   TTY_Loop(tty, user_loop);
   TTY_Close(tty);
 }
