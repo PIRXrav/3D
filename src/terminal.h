@@ -15,7 +15,7 @@
 /*******************************************************************************
  * Types
  ******************************************************************************/
-
+typedef enum { TTY_RENDER_ASCII, TTY_RENDER_PIXELS } RenderType;
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -27,7 +27,7 @@
 /*
  *  Initialisation d'un terminal
  */
-struct tty *TTY_Init(Matrix *raster);
+struct tty *TTY_Init(Matrix *raster, RenderType renderType);
 /*
  *  Fermeture d'un terminal
  */

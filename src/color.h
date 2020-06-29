@@ -48,6 +48,8 @@ color CL_Random();
 
 color CL_Negate(color c);
 
+unsigned CL_Brightness(color c);
+
 /**
  * Retourne une couleur interpolee entre c1 et c2 en fonction de factor,
  * retourne c1 pour factor = 0 et c2 pour factor = 1

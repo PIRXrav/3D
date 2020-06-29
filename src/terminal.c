@@ -40,6 +40,7 @@ struct tty {
   /* State */
   int run;
   uint32_t cpt;
+  RenderType renderType;
 };
 
 /*******************************************************************************
@@ -52,11 +53,11 @@ struct tty {
 static void TTY_Render(struct tty *tty);
 
 /**
- * Permet de remplir buffer avec une paire de pixels (x, y1), (x, y2) (si y2 ==
- * -1, alors (x, y2) sera noir)
+ * Permet de render la scene avec la methode TTY_RENDER_PIXELS ou
+ * TTY_RENDER_ASCII
  */
-static void TTY_RenderPixelPair(char *buffer, struct tty *tty, uint32_t x,
-                                uint32_t y1, uint32_t y2);
+static void TTY_DrawPixels_Square(struct tty *tty);
+static void TTY_DrawPixels_ASCII(struct tty *tty);
 
 /*
  * Met a jour le buffer de sortie pour la taille du terminal
@@ -81,7 +82,7 @@ static int halted = 0;
 /*
  *  Initialisation d'un terminal
  */
-extern struct tty *TTY_Init(Matrix *raster) {
+extern struct tty *TTY_Init(Matrix *raster, RenderType renderType) {
   struct tty *tty = malloc(sizeof(struct tty));
 
   tty->buffer = NULL;
@@ -91,6 +92,8 @@ extern struct tty *TTY_Init(Matrix *raster) {
   tty->cpt = 0;
   tty->run = 1;
   TTY_QuerySize(&tty->width, &tty->height);
+
+  tty->renderType = renderType;
 
   TTY_ResizeBuffer(tty);
 
@@ -171,18 +174,30 @@ static void TTY_ResizeBuffer(struct tty *tty) {
  *  Mise a jour du rendu
  */
 static void TTY_Render(struct tty *tty) {
+  switch (tty->renderType) {
+  case TTY_RENDER_ASCII:
+    TTY_DrawPixels_ASCII(tty);
+    break;
+  case TTY_RENDER_PIXELS:
+    TTY_DrawPixels_Square(tty);
+    break;
+  }
+}
+
+static void TTY_DrawPixels_ASCII(struct tty *tty) {
+  static unsigned int nbChars = 69;
+  static const char *chars = ".'`^\",:;Il!i><~+_-?][}{1)(|\\/"
+                             "tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$";
   uint32_t maxWidth = MIN(tty->width, tty->raster->xmax);
   uint32_t maxHeight = MIN(tty->height, tty->raster->ymax);
-  for (uint32_t y = 0; y <= tty->height; y += 2) {
+  for (uint32_t y = 0; y < maxHeight; y++) {
     if (y < maxHeight) {
       for (uint32_t x = 0; x < maxWidth; x++) {
-        char buffer[PIXELS_SIZE];
-        TTY_RenderPixelPair(buffer, tty, x, y,
-                            y + 1 == maxHeight ? (uint32_t)-1 : y + 1);
-        printf(buffer);
-        // Delai pour que ça saccade pas (hum hum)
-        for (int i = 0; i < 500; i++)
-          buffer[0] += i;
+
+        unsigned lum = CL_Brightness(RASTER_GetPixelxy(tty->raster, x, y));
+        unsigned indice = (int)((lum * nbChars) / 255);
+        putc(chars[indice], stdout);
+        putc(chars[indice], stdout);
       }
     }
     printf("\n");
@@ -190,14 +205,23 @@ static void TTY_Render(struct tty *tty) {
   fflush(stdout);
 }
 
-static void TTY_RenderPixelPair(char *buffer, struct tty *tty, uint32_t x,
-                                uint32_t y1, uint32_t y2) {
-  color bg = RASTER_GetPixelxy(tty->raster, x, y1);
-  color fg =
-      y2 != (uint32_t)-1 ? RASTER_GetPixelxy(tty->raster, x, y2) : CL_BLACK;
+static void TTY_DrawPixels_Square(struct tty *tty) {
+  uint32_t maxWidth = MIN(tty->width, tty->raster->xmax);
+  uint32_t maxHeight = MIN(tty->height, tty->raster->ymax);
+  for (uint32_t y = 0; y <= tty->height; y += 2) {
+    if (y < maxHeight) {
+      for (uint32_t x = 0; x < maxWidth; x++) {
+        color bg = RASTER_GetPixelxy(tty->raster, x, y);
+        color fg = y + 1 < maxHeight ? RASTER_GetPixelxy(tty->raster, x, y + 1)
+                                     : CL_BLACK;
 
-  sprintf(buffer, "\x1b[48;2;%u;%u;%um\x1b[38;2;%u;%u;%um\u2584\x1b[0m",
-          bg.rgb.r, bg.rgb.g, bg.rgb.b, fg.rgb.r, fg.rgb.g, fg.rgb.b);
+        printf("\x1b[48;2;%u;%u;%um\x1b[38;2;%u;%u;%um\u2584\x1b[0m", bg.rgb.r,
+               bg.rgb.g, bg.rgb.b, fg.rgb.r, fg.rgb.g, fg.rgb.b);
+      }
+    }
+    printf("\n");
+  }
+  fflush(stdout);
 }
 
 static void TTY_SignalReceived(int signal) {
