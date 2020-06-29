@@ -185,6 +185,7 @@ extern struct Render *RD_Init(unsigned int xmax, unsigned int ymax) {
   ret->raster = MATRIX_Init(xmax, ymax, sizeof(color), "color");
   ret->zbuffer = MATRIX_Init(xmax, ymax, sizeof(double), "double");
   ret->fbuffer = MATRIX_Init(xmax, ymax, sizeof(MeshFace *), "MF*");
+  ret->gbuffer = MATRIX_Init(xmax, ymax, sizeof(Vector), "VECT");
 
   // Repere
   VECT_Cpy(&ret->p0.world, &VECT_0);
@@ -421,7 +422,7 @@ extern void RD_DrawNormales(struct Render *rd) {
   }
 }
 
-extern void RD_DrawGbuffer(struct Render *rd) {
+extern void RD_CalcGbuffer(struct Render *rd) {
   Vector normal;
   Vector w;
   for (size_t x = 0; x < rd->raster->xmax; x++) {
@@ -436,10 +437,25 @@ extern void RD_DrawGbuffer(struct Render *rd) {
         normal.z = f->p0->normal.z * w.x + f->p1->normal.z * w.y +
                    f->p2->normal.z * w.z;
         VECT_Normalise(&normal);
+        ((Vector *)MATRIX_Edit(rd->gbuffer, x, y))->x = normal.x;
+        ((Vector *)MATRIX_Edit(rd->gbuffer, x, y))->y = normal.y;
+        ((Vector *)MATRIX_Edit(rd->gbuffer, x, y))->z = normal.z;
+      }
+    }
+  }
+}
+
+extern void RD_DrawGbuffer(struct Render *rd) {
+  Vector *normal;
+  for (size_t x = 0; x < rd->raster->xmax; x++) {
+    for (size_t y = 0; y < rd->raster->ymax; y++) {
+      MeshFace *f = *(MeshFace **)MATRIX_Edit(rd->fbuffer, x, y);
+      if (f != NULL) {
+        normal = MATRIX_Edit(rd->gbuffer, x, y);
         RASTER_DrawPixelxy(rd->raster, x, y,
-                           CL_rgb(abs((int)(normal.x * 255)),
-                                  abs((int)(normal.y * 255)),
-                                  abs((int)(normal.z * 255))));
+                           CL_rgb(abs((int)(normal->x * 255)),
+                                  abs((int)(normal->y * 255)),
+                                  abs((int)(normal->z * 255))));
       }
     }
   }
@@ -451,7 +467,7 @@ extern void RD_DrawFbufferWithLum(struct Render *rd, struct Vector *lv,
     for (size_t y = 0; y < rd->raster->ymax; y++) {
       MeshFace *f = *(MeshFace **)MATRIX_Edit(rd->fbuffer, x, y);
       if (f != NULL) {
-        double k = VECT_DotProduct(lv, &f->normal);
+        double k = VECT_DotProduct(lv, MATRIX_Edit(rd->gbuffer, x, y));
         k = k < 0 ? 0 : k;
         RASTER_DrawPixelxy(rd->raster, x, y,
                            CL_rgb(k * lc.rgb.r, k * lc.rgb.g, k * lc.rgb.b));

@@ -188,7 +188,6 @@ extern void MESH_CalcVerticesNormales(Mesh *mesh) {
   static MeshFace *f;
   for (size_t iv = 0; iv < MESH_GetNbVertice(mesh); iv++) {
     v = MESH_GetVertex(mesh, iv);
-    uint32_t cpt = 0;
     VECT_Cpy(&v->normal, &VECT_0);
     // On somme les normales des faces qui contiennent v;
     for (size_t i = 0; i < MESH_GetNbFace(mesh); i++) {

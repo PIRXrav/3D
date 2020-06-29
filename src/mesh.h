@@ -94,4 +94,5 @@ extern void MESH_Print(const Mesh *mesh);
 
 extern void MESH_CalcVerticesNormales(Mesh *mesh);
 
+
 #endif /* _GEO_H_ */

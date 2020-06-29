@@ -70,23 +70,26 @@ void user_loop(unsigned int cpt) {
   RD_CalcProjectionVertices(rd); // Calcul des projections
   RD_CalcZbuffer(rd);            // Calcul du Z buffer
   RD_calcCacheBarycentres(rd);
+  RD_CalcGbuffer(rd);
 
   // Rendu
   // RD_DrawRaytracing(rd);
   RD_DrawFill(rd);
 
-  // RD_DrawZbuffer(rd);
+  RD_DrawZbuffer(rd);
   RD_DrawGbuffer(rd);
   Vector lum = {1, 1, 1};
   VECT_Normalise(&lum);
   // RD_DrawFbufferWithLum(rd, &lum, CL_CHARTREUSE);
+
+  // Rendu debug
   // RD_DrawWireframe(rd);
   // RD_DrawVertices(rd);
   // RD_DrawNormales(rd);
-  RD_DrawAxis(rd);
+  // RD_DrawAxis(rd);
 
   // Filtres vidéo
-  // RASTER_Negate(rd->raster);
+  RASTER_Negate(rd->raster);
   // printf("\n================= CONFIG ===============\n");
   // RD_Print(rd);
   // getchar();

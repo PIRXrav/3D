@@ -55,11 +55,14 @@ struct Render {
   /* Ecran */
   Matrix *raster; // Rendu de la scene 2D matrix
 
-  /* Z buffer */
+  /* Z buffer (double)*/
   Matrix *zbuffer;
 
-  /* Face buffer */
+  /* Face buffer (MeshFace*)*/
   Matrix *fbuffer;
+
+  /* G buffer (Vertex)*/
+  Matrix *gbuffer;
 };
 
 /*******************************************************************************
@@ -122,6 +125,7 @@ void RD_CalcZbuffer(struct Render *rd);
 void RD_CalcProjectionVertices(struct Render *rd);
 void RD_CalcNormales(struct Render *rd);
 void RD_calcCacheBarycentres(struct Render *rd);
+void RD_CalcGbuffer(struct Render *rd);
 
 void RD_RenderRaster(struct Render *rd);
 
